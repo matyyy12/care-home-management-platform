@@ -1,0 +1,42 @@
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: senior_home
+      POSTGRES_USER: senior_home
+      POSTGRES_PASSWORD: senior_home
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U senior_home -d senior_home"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      target: backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/senior_home
+      SPRING_DATASOURCE_USERNAME: senior_home
+      SPRING_DATASOURCE_PASSWORD: senior_home
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
