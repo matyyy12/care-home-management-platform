@@ -1,4 +1,4 @@
-package com.bd2.seniorhomeapp.controllers;
+package com.bd2.seniorhomeapp.test;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
