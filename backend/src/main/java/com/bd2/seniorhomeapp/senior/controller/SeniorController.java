@@ -14,15 +14,14 @@ import com.bd2.seniorhomeapp.senior.dto.CreateSeniorRequest;
 import com.bd2.seniorhomeapp.senior.dto.SeniorResponse;
 import com.bd2.seniorhomeapp.senior.service.SeniorService;
 
+import lombok.AllArgsConstructor;
+
 @RestController
 @RequestMapping("/api/seniors")
+@AllArgsConstructor
 public class SeniorController {
 
 	private final SeniorService seniorService;
-
-	public SeniorController(SeniorService seniorService) {
-		this.seniorService = seniorService;
-	}
 
 	@GetMapping
 	public List<SeniorResponse> list() {
