@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record AddressRequest (
     @NotNull
+    @Size(max = 30)
     String city,
 
     @NotNull
