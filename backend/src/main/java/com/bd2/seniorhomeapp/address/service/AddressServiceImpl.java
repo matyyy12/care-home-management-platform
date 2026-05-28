@@ -6,12 +6,14 @@ import com.bd2.seniorhomeapp.address.entity.Address;
 import com.bd2.seniorhomeapp.address.repository.AddressRepository;
 import com.bd2.seniorhomeapp.postOffice.entity.PostOffice;
 import com.bd2.seniorhomeapp.postOffice.repository.PostOfficeRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class AddressServiceImpl implements AddressService {
     private final AddressRepository addressRepository;

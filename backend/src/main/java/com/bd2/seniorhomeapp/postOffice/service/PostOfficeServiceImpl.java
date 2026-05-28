@@ -4,12 +4,14 @@ import com.bd2.seniorhomeapp.postOffice.dto.request.PostOfficeRequest;
 import com.bd2.seniorhomeapp.postOffice.dto.request.PostOfficeUpdateRequest;
 import com.bd2.seniorhomeapp.postOffice.entity.PostOffice;
 import com.bd2.seniorhomeapp.postOffice.repository.PostOfficeRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class PostOfficeServiceImpl implements PostOfficeService {
     private final PostOfficeRepository postOfficeRepository;

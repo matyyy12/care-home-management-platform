@@ -2,6 +2,7 @@ package com.bd2.seniorhomeapp.employee.entity;
 
 
 import com.bd2.seniorhomeapp.address.entity.Address;
+import com.bd2.seniorhomeapp.position.entity.Position;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
@@ -68,10 +69,9 @@ public class Employee {
 //    @JoinColumn(name = "home_id")
 //    private SeniorHome seniorHome;
 
-    // TODO: dodac encje stanowiska
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "position_id", nullable = false)
-//    private Position position;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "position_id", nullable = false)
+    private Position position;
 
     // TODO: dodać encję managera
 //    @ManyToOne(fetch = FetchType.LAZY)
