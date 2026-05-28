@@ -16,7 +16,7 @@ EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
 
-FROM maven:3.9-eclipse-temurin-17-alpine AS backend-build
+FROM maven:3.9-eclipse-temurin-17 AS backend-build
 
 WORKDIR /app/backend
 
@@ -26,7 +26,7 @@ RUN mvn -DskipTests dependency:go-offline
 COPY backend/src ./src
 RUN mvn -DskipTests package
 
-FROM eclipse-temurin:17-jre-alpine AS backend
+FROM eclipse-temurin:17-jre AS backend
 
 WORKDIR /app
 
