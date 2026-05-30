@@ -26,6 +26,17 @@ RUN mvn -DskipTests dependency:go-offline
 COPY backend/src ./src
 RUN mvn -DskipTests package
 
+FROM maven:3.9-eclipse-temurin-17 AS backend-test
+
+WORKDIR /app/backend
+
+COPY backend/pom.xml ./
+RUN mvn -DskipTests dependency:go-offline
+
+COPY backend/src ./src
+
+CMD ["mvn", "-Dtest=AddressControllerTest,PostOfficeControllerTest,PositionControllerTest", "test"]
+
 FROM eclipse-temurin:17-jre AS backend
 
 WORKDIR /app

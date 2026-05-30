@@ -41,3 +41,9 @@ npm run build
 cd backend
 ./mvnw.cmd test
 ```
+
+### Backend tests in Docker
+
+```sh
+docker compose --profile test run --rm backend-test
+```
