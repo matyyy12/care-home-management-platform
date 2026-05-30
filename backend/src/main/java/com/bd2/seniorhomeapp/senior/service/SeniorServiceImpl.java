@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.bd2.seniorhomeapp.senior.dto.CreateSeniorRequest;
 import com.bd2.seniorhomeapp.senior.dto.SeniorResponse;
+import com.bd2.seniorhomeapp.senior.dto.UpdateSeniorRequest;
 import com.bd2.seniorhomeapp.senior.entity.Senior;
 import com.bd2.seniorhomeapp.senior.repository.SeniorRepository;
 
@@ -26,21 +27,22 @@ public class SeniorServiceImpl implements SeniorService {
 
 	@Override
 	public SeniorResponse create(CreateSeniorRequest request) {
-		if (request.firstName() == null || request.firstName().isBlank()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "firstName is required");
-		}
-		if (request.lastName() == null || request.lastName().isBlank()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "lastName is required");
-		}
-
-		String roomNumber = request.roomNumber() != null && !request.roomNumber().isBlank()
-				? request.roomNumber().trim()
-				: null;
-
 		Senior senior = new Senior(
 				request.firstName().trim(),
 				request.lastName().trim(),
-				roomNumber);
+				request.roomNumber().trim());
+		return SeniorResponse.from(seniorRepository.save(senior));
+	}
+
+	@Override
+	public SeniorResponse update(Long id, UpdateSeniorRequest request) {
+		Senior senior = seniorRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior not found"));
+
+		senior.setFirstName(request.firstName().trim());
+		senior.setLastName(request.lastName().trim());
+		senior.setRoomNumber(request.roomNumber().trim());
+
 		return SeniorResponse.from(seniorRepository.save(senior));
 	}
 }
