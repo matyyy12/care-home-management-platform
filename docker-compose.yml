@@ -29,6 +29,13 @@ services:
       database:
         condition: service_healthy
 
+  backend-test:
+    profiles:
+      - test
+    build:
+      context: .
+      target: backend-test
+
   frontend:
     build:
       context: .
