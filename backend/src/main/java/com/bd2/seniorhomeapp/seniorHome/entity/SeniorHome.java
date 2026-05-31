@@ -3,7 +3,6 @@ package com.bd2.seniorhomeapp.seniorHome.entity;
 import com.bd2.seniorhomeapp.address.entity.Address;
 import com.bd2.seniorhomeapp.owner.entity.Owner;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +14,7 @@ import lombok.Setter;
 import java.util.Date;
 import java.util.Set;
 
+// TODO: Maybe add custom validator for website
 @Entity
 @Getter
 @Setter
@@ -50,15 +50,5 @@ public class SeniorHome {
 
     @OneToMany(mappedBy = "seniorHome", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Owner> owners;
-
-
-    @AssertTrue
-    public boolean isValid() {
-        if ((!website.contains("http") || !website.contains("https")) || !website.contains("www")) {
-            return false;
-        }
-        return true;
-    }
-
 
 }
