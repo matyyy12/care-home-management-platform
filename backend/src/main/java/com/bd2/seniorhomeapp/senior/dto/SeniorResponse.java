@@ -1,21 +1,37 @@
 package com.bd2.seniorhomeapp.senior.dto;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 import com.bd2.seniorhomeapp.senior.entity.Senior;
 import com.bd2.seniorhomeapp.senior.entity.SeniorStatus;
 
 public record SeniorResponse(
-		Long id,
+		Long seniorId,
 		String firstName,
 		String lastName,
-		String roomNumber,
+		LocalDate birthDate,
+		String pesel,
+		List<String> diseases,
+		String gender,
+		LocalDate accommodationDate,
+		LocalDate dischargeDate,
+		SeniorHome seniorHome,
 		SeniorStatus status) {
 
 	public static SeniorResponse from(Senior senior) {
 		return new SeniorResponse(
-				senior.getId(),
+				senior.getSeniorId(),
 				senior.getFirstName(),
 				senior.getLastName(),
-				senior.getRoomNumber(),
+				senior.getBirthDate(),
+				senior.getPesel(),
+				senior.getDiseases(),
+				senior.getGender(),
+				senior.getAccommodationDate(),
+				senior.getDischargeDate(),
+				senior.getSeniorHome(),
 				senior.getStatus());
 	}
 }

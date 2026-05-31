@@ -30,7 +30,13 @@ public class SeniorServiceImpl implements SeniorService {
 		Senior senior = new Senior(
 				request.firstName().trim(),
 				request.lastName().trim(),
-				request.roomNumber().trim());
+				request.birthDate(),
+				request.pesel().trim(),
+				request.diseases().stream().map(String::trim).toList(),
+				request.gender().trim(),
+				request.accommodationDate(),
+				request.dischargeDate(),
+				request.seniorHouse());
 		return SeniorResponse.from(seniorRepository.save(senior));
 	}
 
@@ -41,7 +47,13 @@ public class SeniorServiceImpl implements SeniorService {
 
 		senior.setFirstName(request.firstName().trim());
 		senior.setLastName(request.lastName().trim());
-		senior.setRoomNumber(request.roomNumber().trim());
+		senior.setBirthDate(request.birthDate());
+		senior.setPesel(request.pesel().trim());
+		senior.setDiseases(request.diseases().stream().map(String::trim).toList());
+		senior.setGender(request.gender().trim());
+		senior.setAccommodationDate(request.accommodationDate());
+		senior.setDischargeDate(request.dischargeDate());
+		senior.setSeniorHome(request.seniorHome());
 
 		return SeniorResponse.from(seniorRepository.save(senior));
 	}
