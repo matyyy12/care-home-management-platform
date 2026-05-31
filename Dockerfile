@@ -35,7 +35,7 @@ RUN mvn -DskipTests dependency:go-offline
 
 COPY backend/src ./src
 
-CMD ["mvn", "-Dtest=AddressControllerTest,PostOfficeControllerTest,PositionControllerTest", "test"]
+CMD ["mvn", "-B", "-ntp", "test"]
 
 FROM eclipse-temurin:17-jre AS backend
 

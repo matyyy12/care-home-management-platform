@@ -35,6 +35,14 @@ services:
     build:
       context: .
       target: backend-test
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/senior_home
+      SPRING_DATASOURCE_USERNAME: senior_home
+      SPRING_DATASOURCE_PASSWORD: senior_home
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+    depends_on:
+      database:
+        condition: service_healthy
 
   frontend:
     build:
