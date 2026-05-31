@@ -34,15 +34,15 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(address));
     }
 
-    @PatchMapping
+    @PatchMapping("/{id}")
     public ResponseEntity<?> updateAddress(@Valid @RequestBody AddressUpdateRequest addressUpdateRequest,
-                                           @RequestParam Long id) {
+                                           @PathVariable Long id) {
         Address address = addressService.updateAddress(addressUpdateRequest, id);
         return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(address));
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deleteAddress(@RequestParam Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAddress(@PathVariable Long id) {
         addressService.deleteAddress(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

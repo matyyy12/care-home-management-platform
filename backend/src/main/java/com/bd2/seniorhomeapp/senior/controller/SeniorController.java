@@ -6,13 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.bd2.seniorhomeapp.senior.dto.CreateSeniorRequest;
 import com.bd2.seniorhomeapp.senior.dto.SeniorResponse;
@@ -29,8 +23,9 @@ public class SeniorController {
 	private final SeniorService seniorService;
 
 	@GetMapping
-	public List<SeniorResponse> list() {
-		return seniorService.findAll();
+	public ResponseEntity<?> list(@RequestParam(required = false) Long id) {
+		List<SeniorResponse> response = seniorService.findAll(id);
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
 	@PostMapping
@@ -40,9 +35,10 @@ public class SeniorController {
 	}
 
 	@PutMapping("/{id}")
-	public SeniorResponse update(
+	public ResponseEntity<?> update(
 			@PathVariable Long id,
 			@Valid @RequestBody UpdateSeniorRequest request) {
-		return seniorService.update(id, request);
+		SeniorResponse seniorResponse = seniorService.update(id, request);
+		return ResponseEntity.status(HttpStatus.OK).body(seniorResponse);
 	}
 }

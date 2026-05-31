@@ -35,15 +35,15 @@ public class PostOfficeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(postOffice));
     }
 
-    @PatchMapping
+    @PatchMapping("/{id}")
     public ResponseEntity<?> updatePostOffice(@Valid @RequestBody PostOfficeUpdateRequest postOfficeUpdateRequest,
-                                              @RequestParam Long id) {
+                                              @PathVariable Long id) {
         PostOffice postOffice = postOfficeService.updatePostOffice(postOfficeUpdateRequest, id);
         return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(postOffice));
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deletePostOffice(@RequestParam Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePostOffice(@PathVariable Long id) {
         postOfficeService.deletePostOffice(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

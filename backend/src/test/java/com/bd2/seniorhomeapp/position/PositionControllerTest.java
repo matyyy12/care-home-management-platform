@@ -78,8 +78,7 @@ class PositionControllerTest {
         Position position = position(1L, "Kierownik", "Zarzadza pracownikami");
         when(positionService.updatePosition(any(), eq(1L))).thenReturn(position);
 
-        mockMvc.perform(patch("/api/positions")
-                        .param("id", "1")
+        mockMvc.perform(patch("/api/positions/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -95,7 +94,7 @@ class PositionControllerTest {
 
     @Test
     void deletePositionShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/positions").param("id", "1"))
+        mockMvc.perform(delete("/api/positions/1"))
                 .andExpect(status().isNoContent());
 
         verify(positionService).deletePosition(1L);

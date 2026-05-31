@@ -1,5 +1,7 @@
 package com.bd2.seniorhomeapp.address.dto.request;
 
+import com.bd2.seniorhomeapp.postOffice.dto.request.PostOfficeRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -16,6 +18,7 @@ public record AddressRequest (
     @Size(max = 4)
     String number,
 
+    @Valid
     @NotNull
-    Long postOfficeId
+    PostOfficeRequest postOffice
 ) {}
