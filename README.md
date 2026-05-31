@@ -31,19 +31,11 @@ npm run dev
 After startup:
 - frontend: `http://localhost:5173`
 - backend: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 - postgres: `localhost:5432`
 
 The Vite dev server proxies `/api` requests to the backend on port `8080`.
-
-### API vs dane demo
-
-Moduły **Seniorzy**, **Stanowiska** i **Adresy / poczty** ładują dane z backendu (`/api/...`).
-Gdy backend nie działa lub `VITE_USE_API=false`, widoki automatycznie przełączają się na `mock/data.js`.
-
-Pozostałe ekrany (pulpit, pracownicy, pomieszczenia, raporty itd.) nadal korzystają z mocków —
-backend nie ma jeszcze dla nich endpointów.
-
-Skopiuj `frontend/.env.example` do `frontend/.env` i dostosuj zmienne w razie potrzeby.
 
 ### Frontend
 
