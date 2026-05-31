@@ -16,5 +16,5 @@ public record CreateSeniorRequest(
 		@NotBlank String gender,
 		@NotBlank LocalDate accommodationDate,
 		@NotBlank LocalDate dischargeDate,
-		@NotBlank SeniorHome seniorHouse) {
+		@NotBlank SeniorHome seniorHome) {
 }

@@ -36,7 +36,7 @@ public class SeniorServiceImpl implements SeniorService {
 				request.gender().trim(),
 				request.accommodationDate(),
 				request.dischargeDate(),
-				request.seniorHouse());
+				request.seniorHome());
 		return SeniorResponse.from(seniorRepository.save(senior));
 	}
 
