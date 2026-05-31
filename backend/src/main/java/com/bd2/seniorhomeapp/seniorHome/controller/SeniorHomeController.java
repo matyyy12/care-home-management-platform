@@ -2,26 +2,71 @@ package com.bd2.seniorhomeapp.seniorHome.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bd2.seniorhomeapp.seniorHome.dto.SeniorHomeSummaryResponse;
-import com.bd2.seniorhomeapp.seniorHome.repository.SeniorHomeRepository;
+import com.bd2.seniorhomeapp.seniorHome.dto.request.SeniorHomeRequest;
+import com.bd2.seniorhomeapp.seniorHome.dto.request.SeniorHomeUpdateRequest;
+import com.bd2.seniorhomeapp.seniorHome.dto.response.SeniorHomeResponse;
+import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
+import com.bd2.seniorhomeapp.seniorHome.service.SeniorHomeService;
 
-import lombok.AllArgsConstructor;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/senior-homes")
-@AllArgsConstructor
+@RequiredArgsConstructor
+@RequestMapping("/api/senior-home")
 public class SeniorHomeController {
 
-	private final SeniorHomeRepository seniorHomeRepository;
+    private final SeniorHomeService seniorHomeService;
 
-	@GetMapping
-	public List<SeniorHomeSummaryResponse> list() {
-		return seniorHomeRepository.findAll().stream()
-				.map(SeniorHomeSummaryResponse::from)
-				.toList();
-	}
+    @GetMapping
+    public ResponseEntity<?> getHomes(@RequestParam(required = false) Long homeId) {
+        List<SeniorHomeResponse> seniorHome = seniorHomeService.findHomes(homeId)
+                .stream().map(this::mapToResponse).toList();
+        return ResponseEntity.status(HttpStatus.OK).body(seniorHome);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createHome(@Valid @RequestBody SeniorHomeRequest seniorHomeRequest) {
+        SeniorHome seniorHome = seniorHomeService.createHome(seniorHomeRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(seniorHome));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateHome(@Valid @RequestBody SeniorHomeUpdateRequest seniorHomeUpdateRequest,
+                                        @PathVariable Long id) {
+        SeniorHome seniorHome = seniorHomeService.updateHome(seniorHomeUpdateRequest, id);
+        return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(seniorHome));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteHome(@PathVariable Long id) {
+        seniorHomeService.deleteHome(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+
+    private SeniorHomeResponse mapToResponse(SeniorHome seniorHome){
+        return new SeniorHomeResponse(
+                seniorHome.getId(),
+                seniorHome.getName(),
+                seniorHome.getPhoneNumber(),
+                seniorHome.getEmail(),
+                seniorHome.getWebsite(),
+                seniorHome.getAddress().getCity(),
+                seniorHome.getAddress().getStreet(),
+                seniorHome.getAddress().getNumber()
+        );
+    }
 }

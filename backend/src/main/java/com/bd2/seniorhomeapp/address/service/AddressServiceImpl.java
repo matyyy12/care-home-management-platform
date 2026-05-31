@@ -4,6 +4,7 @@ import com.bd2.seniorhomeapp.address.dto.request.AddressRequest;
 import com.bd2.seniorhomeapp.address.dto.request.AddressUpdateRequest;
 import com.bd2.seniorhomeapp.address.entity.Address;
 import com.bd2.seniorhomeapp.address.repository.AddressRepository;
+import com.bd2.seniorhomeapp.postOffice.dto.request.PostOfficeRequest;
 import com.bd2.seniorhomeapp.postOffice.entity.PostOffice;
 import com.bd2.seniorhomeapp.postOffice.repository.PostOfficeRepository;
 import jakarta.transaction.Transactional;
@@ -21,15 +22,27 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public Address createAddress(AddressRequest addressRequest){
-        PostOffice postOffice = postOfficeRepository.findById(addressRequest.postOfficeId())
-                .orElseThrow(()-> new RuntimeException("PostOffice not found"));
+        return findOrCreateAddress(addressRequest);
+    }
 
-        Address address = new Address();
-        address.setCity(addressRequest.city());
-        address.setNumber(addressRequest.number());
-        address.setStreet(addressRequest.street());
-        address.setPostOffice(postOffice);
-        return addressRepository.save(address);
+    @Override
+    public Address findOrCreateAddress(AddressRequest addressRequest) {
+        PostOffice postOffice = findOrCreatePostOffice(addressRequest.postOffice());
+
+        return addressRepository.findByCityAndStreetAndNumberAndPostOffice(
+                        addressRequest.city(),
+                        addressRequest.street(),
+                        addressRequest.number(),
+                        postOffice
+                )
+                .orElseGet(() -> {
+                    Address address = new Address();
+                    address.setCity(addressRequest.city());
+                    address.setNumber(addressRequest.number());
+                    address.setStreet(addressRequest.street());
+                    address.setPostOffice(postOffice);
+                    return addressRepository.save(address);
+                });
     }
 
     @Override
@@ -60,10 +73,8 @@ public class AddressServiceImpl implements AddressService {
         if (addressUpdateRequest.number() != null) {
             address.setNumber(addressUpdateRequest.number());
         }
-        if (addressUpdateRequest.postOfficeId() != null) {
-            PostOffice postOffice = postOfficeRepository.findById(addressUpdateRequest.postOfficeId())
-                    .orElseThrow(()-> new RuntimeException("PostOffice not found"));
-            address.setPostOffice(postOffice);
+        if (addressUpdateRequest.postOffice() != null) {
+            address.setPostOffice(findOrCreatePostOffice(addressUpdateRequest.postOffice()));
         }
         return addressRepository.save(address);
     }
@@ -74,6 +85,16 @@ public class AddressServiceImpl implements AddressService {
             throw new RuntimeException("Address not found");
         }
         addressRepository.deleteById(id);
+    }
+
+    private PostOffice findOrCreatePostOffice(PostOfficeRequest postOfficeRequest) {
+        return postOfficeRepository.findByPostalCode(postOfficeRequest.postalCode())
+                .orElseGet(() -> {
+                    PostOffice postOffice = new PostOffice();
+                    postOffice.setPostalCode(postOfficeRequest.postalCode());
+                    postOffice.setCity(postOfficeRequest.city());
+                    return postOfficeRepository.save(postOffice);
+                });
     }
 
 }

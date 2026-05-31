@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface AddressService {
     Address createAddress(AddressRequest addressRequest);
+    Address findOrCreateAddress(AddressRequest addressRequest);
     List<Address> findAddresses(Long id, String city);
     Address updateAddress(AddressUpdateRequest addressUpdateRequest, Long id);
     void deleteAddress(Long id);
