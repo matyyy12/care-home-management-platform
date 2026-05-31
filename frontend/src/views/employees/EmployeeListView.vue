@@ -8,7 +8,11 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
+import { usePermissions } from '@/composables/usePermissions'
 import { useLocalCollection } from '@/composables/useLocalCollection'
+
+const { canWrite } = usePermissions('employees')
 import { employees as initialEmployees, seniorHomes, positions } from '@/mock/data'
 
 const { items: employeeList, add } = useLocalCollection(initialEmployees)
@@ -80,7 +84,9 @@ function handleSubmit() {
       description="Personel domu seniora — stanowisko, adres, kierownik oraz oznaczenie pracownika medycznego."
     />
 
-    <AppCard title="Dodaj pracownika">
+    <ReadOnlyNotice v-if="!canWrite" />
+
+    <AppCard v-if="canWrite" title="Dodaj pracownika">
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleSubmit">
         <FormField label="Imię" required>
           <AppInput v-model="form.firstName" required />

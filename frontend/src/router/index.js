@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -83,9 +84,32 @@ const router = createRouter({
           name: 'report-data-quality',
           component: () => import('@/views/reports/DataQualityReportView.vue'),
         },
+        {
+          path: 'administracja',
+          name: 'administration',
+          component: () => import('@/views/administration/AdministrationView.vue'),
+        },
+        {
+          path: 'brak-dostepu',
+          name: 'forbidden',
+          component: () => import('@/views/errors/ForbiddenView.vue'),
+        },
       ],
     },
   ],
+})
+
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  const routeName = to.name
+
+  if (!routeName || routeName === 'forbidden') return true
+
+  if (!auth.canRead(routeName)) {
+    return { name: 'forbidden', query: { from: to.fullPath } }
+  }
+
+  return true
 })
 
 export default router

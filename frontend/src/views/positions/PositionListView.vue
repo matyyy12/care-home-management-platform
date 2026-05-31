@@ -7,7 +7,11 @@ import FormField from '@/components/ui/FormField.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
+import { usePermissions } from '@/composables/usePermissions'
 import { useLocalCollection } from '@/composables/useLocalCollection'
+
+const { canWrite } = usePermissions('positions')
 import { positions as initialPositions } from '@/mock/data'
 
 const { items: positionList, add } = useLocalCollection(initialPositions)
@@ -32,7 +36,9 @@ function handleSubmit() {
       description="Słownik stanowisk — wykorzystywany w ewidencji personelu i raportach obciążenia."
     />
 
-    <AppCard title="Dodaj stanowisko">
+    <ReadOnlyNotice v-if="!canWrite" />
+
+    <AppCard v-if="canWrite" title="Dodaj stanowisko">
       <form class="max-w-xl space-y-4" @submit.prevent="handleSubmit">
         <FormField label="Nazwa" required>
           <AppInput v-model="form.name" required />

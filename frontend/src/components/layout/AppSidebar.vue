@@ -2,10 +2,20 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { navigationGroups } from '@/constants/navigation'
+import { useAuthStore } from '@/stores/auth'
+import RoleSwitcher from './RoleSwitcher.vue'
 
 const route = useRoute()
+const auth = useAuthStore()
 
-const groups = computed(() => navigationGroups)
+const groups = computed(() =>
+  navigationGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => auth.canRead(item.routeName)),
+    }))
+    .filter((group) => group.items.length > 0),
+)
 
 function isActive(path) {
   if (path === '/') return route.path === '/'
@@ -19,6 +29,8 @@ function isActive(path) {
       <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Senior House</p>
       <h1 class="mt-1 text-lg font-semibold text-slate-900">Panel zarządzania</h1>
     </div>
+
+    <RoleSwitcher />
 
     <nav class="flex-1 overflow-y-auto px-3 py-4" aria-label="Główne menu">
       <div v-for="group in groups" :key="group.label" class="mb-6">
@@ -44,7 +56,7 @@ function isActive(path) {
     </nav>
 
     <div class="border-t border-slate-100 px-4 py-4 text-xs text-slate-500">
-      Dane demonstracyjne — API niepodłączone
+      Dostęp wg roli aplikacyjnej (demo)
     </div>
   </aside>
 </template>

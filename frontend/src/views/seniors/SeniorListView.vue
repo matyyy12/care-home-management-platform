@@ -9,7 +9,11 @@ import AppSelect from '@/components/ui/AppSelect.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
+import { usePermissions } from '@/composables/usePermissions'
 import { useLocalCollection } from '@/composables/useLocalCollection'
+
+const { canWrite, role } = usePermissions('seniors')
 import { seniors as initialSeniors, seniorHomes } from '@/mock/data'
 import { GENDER_OPTIONS, SENIOR_STATUS_LABELS } from '@/constants/enums'
 
@@ -87,7 +91,14 @@ function statusBadge(row) {
 
     <AlertMessage v-if="formNotice" variant="info">{{ formNotice }}</AlertMessage>
 
-    <AppCard title="Dodaj seniora">
+    <ReadOnlyNotice v-if="!canWrite">
+      <template v-if="role === 'MEDICAL'">
+        Jako pracownik medyczny przeglądasz dane seniorów (w tym choroby). Dodawanie i edycja
+        ewidencji należą do menadżera lub dyrektora.
+      </template>
+    </ReadOnlyNotice>
+
+    <AppCard v-if="canWrite" title="Dodaj seniora">
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleSubmit">
         <FormField label="Imię" required>
           <AppInput v-model="form.firstName" required />

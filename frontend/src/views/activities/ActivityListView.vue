@@ -9,7 +9,11 @@ import AppSelect from '@/components/ui/AppSelect.vue'
 import AppTextarea from '@/components/ui/AppTextarea.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
+import { usePermissions } from '@/composables/usePermissions'
 import { useLocalCollection } from '@/composables/useLocalCollection'
+
+const { canWrite } = usePermissions('activities')
 import { activities as initialActivities, seniorHomes } from '@/mock/data'
 import { ACTIVITY_TYPES } from '@/constants/enums'
 
@@ -66,7 +70,12 @@ function typeVariant(type) {
       description="Zajęcia medyczne, rekreacyjne i kulturalne — cena, prowadzący i uczestnicy."
     />
 
-    <AppCard title="Dodaj zajęcia">
+    <ReadOnlyNotice v-if="!canWrite">
+      Zajęcia medyczne przeglądasz w trybie podglądu — tworzenie i edycja harmonogramu dla menadżera
+      lub dyrektora.
+    </ReadOnlyNotice>
+
+    <AppCard v-if="canWrite" title="Dodaj zajęcia">
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleSubmit">
         <FormField label="Nazwa" required>
           <AppInput v-model="form.name" required />

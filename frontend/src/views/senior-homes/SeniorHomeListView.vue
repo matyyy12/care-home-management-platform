@@ -6,7 +6,11 @@ import DataTable from '@/components/ui/DataTable.vue'
 import FormField from '@/components/ui/FormField.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
+import { usePermissions } from '@/composables/usePermissions'
 import { useLocalCollection } from '@/composables/useLocalCollection'
+
+const { canWrite } = usePermissions('senior-homes')
 import { seniorHomes as initialHomes } from '@/mock/data'
 
 const { items: homes, add } = useLocalCollection(initialHomes)
@@ -49,7 +53,9 @@ function handleSubmit() {
       description="Ewidencja domów seniora: dane kontaktowe, adres i właściciele."
     />
 
-    <AppCard title="Dodaj dom seniora">
+    <ReadOnlyNotice v-if="!canWrite" />
+
+    <AppCard v-if="canWrite" title="Dodaj dom seniora">
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleSubmit">
         <FormField label="Nazwa" required>
           <AppInput v-model="form.name" required />

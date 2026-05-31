@@ -7,7 +7,11 @@ import FormField from '@/components/ui/FormField.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
+import { usePermissions } from '@/composables/usePermissions'
 import { useLocalCollection } from '@/composables/useLocalCollection'
+
+const { canWrite } = usePermissions('addresses')
 import { addresses as initialAddresses, postOffices as initialPostOffices } from '@/mock/data'
 
 const { items: addresses, add: addAddress } = useLocalCollection(initialAddresses)
@@ -64,9 +68,11 @@ function submitPostOffice() {
       description="Rejestr adresów z powiązaniem do poczty — ograniczenie duplikatów danych adresowych."
     />
 
+    <ReadOnlyNotice v-if="!canWrite" />
+
     <div class="grid gap-8 lg:grid-cols-2">
       <AppCard title="Poczty">
-        <form class="mb-4 grid gap-3" @submit.prevent="submitPostOffice">
+        <form v-if="canWrite" class="mb-4 grid gap-3" @submit.prevent="submitPostOffice">
           <FormField label="Kod pocztowy">
             <AppInput v-model="postForm.postalCode" placeholder="00-000" required />
           </FormField>
@@ -79,7 +85,7 @@ function submitPostOffice() {
       </AppCard>
 
       <AppCard title="Adresy">
-        <form class="mb-4 grid gap-3" @submit.prevent="submitAddress">
+        <form v-if="canWrite" class="mb-4 grid gap-3" @submit.prevent="submitAddress">
           <FormField label="Miasto">
             <AppInput v-model="addressForm.city" required />
           </FormField>

@@ -10,22 +10,37 @@ import {
   seniorHomes,
   dataQualityIssues,
 } from '@/mock/data'
+import { useAuthStore } from '@/stores/auth'
 
-const stats = computed(() => [
-  { label: 'Domy seniora', value: seniorHomes.length },
-  { label: 'Aktywni seniorzy', value: seniors.filter((s) => !s.dischargeDate).length },
-  { label: 'Pracownicy', value: employees.length },
-  { label: 'Pomieszczenia', value: rooms.length },
-  { label: 'Zajęcia', value: activities.length },
-  { label: 'Problemy w raporcie jakości', value: dataQualityIssues.length },
-])
+const auth = useAuthStore()
+
+const allStats = [
+  { label: 'Domy seniora', value: () => seniorHomes.length, routeName: 'senior-homes' },
+  {
+    label: 'Aktywni seniorzy',
+    value: () => seniors.filter((s) => !s.dischargeDate).length,
+    routeName: 'seniors',
+  },
+  { label: 'Pracownicy', value: () => employees.length, routeName: 'employees' },
+  { label: 'Pomieszczenia', value: () => rooms.length, routeName: 'rooms' },
+  { label: 'Zajęcia', value: () => activities.length, routeName: 'activities' },
+  {
+    label: 'Problemy w raporcie jakości',
+    value: () => dataQualityIssues.length,
+    routeName: 'report-data-quality',
+  },
+]
+
+const stats = computed(() =>
+  allStats.filter((s) => auth.canRead(s.routeName)).map((s) => ({ label: s.label, value: s.value() })),
+)
 </script>
 
 <template>
   <div class="space-y-8">
     <PageHeader
       title="Pulpit"
-      description="Aplikacja do obsługi domu seniora — ewidencja, przypisania i raportowanie (dane demonstracyjne)."
+      :description="`Zalogowano jako ${auth.roleLabel}. Menu i formularze są ograniczone do uprawnień tej roli.`"
     />
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -44,8 +59,8 @@ const stats = computed(() => [
         <li>Raporty operacyjne i jakości danych</li>
       </ul>
       <p class="mt-4 text-sm text-slate-500">
-        Role użytkowników (dyrektor, menadżer, pracownik, pracownik medyczny, administrator) zostaną
-        dodane po wdrożeniu uwierzytelniania.
+        Rola możesz ją zmienić w panelu bocznym (tryb demo). Po wdrożeniu logowania rola będzie
+        pobierana z konta użytkownika, a backend zweryfikuje te same uprawnienia.
       </p>
     </AppCard>
   </div>
