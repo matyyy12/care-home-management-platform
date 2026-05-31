@@ -7,8 +7,7 @@ import com.bd2.seniorhomeapp.senior.dto.SeniorResponse;
 import com.bd2.seniorhomeapp.senior.dto.UpdateSeniorRequest;
 
 public interface SeniorService {
-
-	List<SeniorResponse> findAll();
+	List<SeniorResponse> findAll(Long id);
 
 	SeniorResponse create(CreateSeniorRequest request);
 
