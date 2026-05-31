@@ -2,66 +2,234 @@
 import { computed } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
+import AlertMessage from '@/components/ui/AlertMessage.vue'
 import {
   seniors,
   employees,
-  rooms,
-  activities,
   seniorHomes,
   dataQualityIssues,
+  roomOccupancyReport,
 } from '@/mock/data'
+import { ROLES } from '@/constants/roles'
+import {
+  DASHBOARD_SECTION_LABELS,
+  DEMO_FOOTER,
+  dashboardDescription,
+  dashboardTitle,
+  statLinkLabel,
+} from '@/constants/dashboardCopy'
 import { useAuthStore } from '@/stores/auth'
+import {
+  computeRoomOccupancy,
+  computeSeniorCounts,
+  computeQualityCounts,
+  formatQualitySubtitle,
+  formatProblemsCount,
+  computeSeniorsPerHome,
+  computeActiveEmployees,
+} from '@/utils/dashboardMetrics'
 
 const auth = useAuthStore()
 
-const allStats = [
-  { label: 'Domy seniora', value: () => seniorHomes.length, routeName: 'senior-homes' },
-  {
-    label: 'Aktywni seniorzy',
-    value: () => seniors.filter((s) => !s.dischargeDate).length,
-    routeName: 'seniors',
-  },
-  { label: 'Pracownicy', value: () => employees.length, routeName: 'employees' },
-  { label: 'Pomieszczenia', value: () => rooms.length, routeName: 'rooms' },
-  { label: 'Zajęcia', value: () => activities.length, routeName: 'activities' },
-  {
-    label: 'Problemy w raporcie jakości',
-    value: () => dataQualityIssues.length,
-    routeName: 'report-data-quality',
-  },
-]
+const pageTitle = computed(() => dashboardTitle(auth.role, auth.roleLabel))
+const pageDescription = computed(() => dashboardDescription(auth.role, auth.roleLabel))
 
-const stats = computed(() =>
-  allStats.filter((s) => auth.canRead(s.routeName)).map((s) => ({ label: s.label, value: s.value() })),
+const seniorCounts = computed(() => computeSeniorCounts(seniors))
+const roomOccupancy = computed(() => computeRoomOccupancy(roomOccupancyReport))
+const qualityCounts = computed(() => computeQualityCounts(dataQualityIssues))
+const seniorsPerHome = computed(() => computeSeniorsPerHome(seniors, seniorHomes))
+
+const homesScopeLabel = computed(() =>
+  seniorHomes.length === 1 ? 'jednym domem seniora' : `${seniorHomes.length} domami seniora`,
 )
+
+const freePlacesLabel = computed(() =>
+  roomOccupancy.value.free === 1 ? 'wolne miejsce' : 'wolne miejsca',
+)
+
+const isDirector = computed(() => auth.role === ROLES.DIRECTOR)
+
+function buildDashboardStats() {
+  const items = []
+
+  if (auth.canRead('report-room-occupancy')) {
+    const occ = roomOccupancy.value
+    items.push({
+      label: 'Obłożenie pokoi',
+      value: `${occ.percent}%`,
+      subtitle: `${occ.assigned} z ${occ.capacity} miejsc zajętych`,
+      routeName: 'report-room-occupancy',
+      linkLabel: statLinkLabel('report-room-occupancy'),
+      occupancyPercent: occ.percent,
+      alert: occ.percent >= 90,
+    })
+    items.push({
+      label: 'Wolne miejsca',
+      value: occ.free,
+      subtitle: 'w pokojach mieszkalnych',
+      routeName: 'report-room-occupancy',
+      linkLabel: statLinkLabel('report-room-occupancy'),
+    })
+  }
+
+  if (auth.canRead('seniors')) {
+    const { active, discharged } = seniorCounts.value
+    items.push({
+      label: 'Aktywni seniorzy',
+      value: active,
+      subtitle:
+        discharged > 0
+          ? `${discharged} wypisanych w ewidencji`
+          : 'Wszyscy wpisani są aktywni',
+      routeName: 'seniors',
+      linkLabel: statLinkLabel('seniors'),
+    })
+  }
+
+  if (auth.canRead('report-data-quality')) {
+    const q = qualityCounts.value
+    items.push({
+      label: 'Jakość danych',
+      value: q.total,
+      subtitle: formatQualitySubtitle(q),
+      routeName: 'report-data-quality',
+      linkLabel: statLinkLabel('report-data-quality'),
+      alert: q.total > 0,
+    })
+  }
+
+  if (auth.canRead('senior-homes')) {
+    items.push({
+      label: 'Domy seniora',
+      value: seniorHomes.length,
+      subtitle: 'w ewidencji organizacyjnej',
+      routeName: 'senior-homes',
+      linkLabel: statLinkLabel('senior-homes'),
+    })
+  }
+
+  if (auth.canRead('employees')) {
+    const activeEmployees = computeActiveEmployees(employees)
+    items.push({
+      label: 'Pracownicy',
+      value: activeEmployees,
+      subtitle:
+        activeEmployees < employees.length
+          ? `${employees.length - activeEmployees} zakończonych umów`
+          : 'Aktywni w ewidencji',
+      routeName: 'employees',
+      linkLabel: statLinkLabel('employees'),
+    })
+  }
+
+  return items
+}
+
+const stats = computed(() => buildDashboardStats())
 </script>
 
 <template>
   <div class="space-y-8">
-    <PageHeader
-      title="Pulpit"
-      :description="`Zalogowano jako ${auth.roleLabel}. Menu i formularze są ograniczone do uprawnień tej roli.`"
-    />
+    <PageHeader :title="pageTitle" :description="pageDescription" />
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <AppCard v-for="stat in stats" :key="stat.label" :padding="true">
-        <p class="text-sm text-slate-500">{{ stat.label }}</p>
-        <p class="mt-1 text-3xl font-semibold text-slate-900">{{ stat.value }}</p>
-      </AppCard>
-    </div>
+    <section>
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        {{ DASHBOARD_SECTION_LABELS.stats }}
+      </h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <RouterLink
+          v-for="stat in stats"
+          :key="stat.label"
+          :to="{ name: stat.routeName }"
+          class="block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+        >
+          <AppCard
+            :padding="true"
+            class="h-full transition-shadow hover:shadow-md"
+            :class="stat.alert ? 'border-amber-300' : ''"
+          >
+            <p class="text-sm text-slate-500">{{ stat.label }}</p>
+            <p
+              class="mt-1 text-3xl font-semibold"
+              :class="stat.alert ? 'text-amber-800' : 'text-slate-900'"
+            >
+              {{ stat.value }}
+            </p>
+            <p v-if="stat.subtitle" class="mt-1 text-sm text-slate-500">{{ stat.subtitle }}</p>
+            <div
+              v-if="stat.occupancyPercent != null"
+              class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"
+              role="presentation"
+            >
+              <div
+                class="h-full rounded-full transition-all"
+                :class="stat.alert ? 'bg-amber-500' : 'bg-emerald-600'"
+                :style="{ width: `${stat.occupancyPercent}%` }"
+              />
+            </div>
+            <p class="mt-3 text-xs font-medium text-emerald-700">{{ stat.linkLabel }}</p>
+          </AppCard>
+        </RouterLink>
+      </div>
+    </section>
 
-    <AppCard title="Moduły systemu">
-      <ul class="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-        <li>Domy seniora, właściciele i adresy</li>
-        <li>Seniorzy, pracownicy i stanowiska</li>
-        <li>Pomieszczenia (pokoje, gabinety, sale gier)</li>
-        <li>Zajęcia, sprzęt i przypisania</li>
-        <li>Raporty operacyjne i jakości danych</li>
-      </ul>
-      <p class="mt-4 text-sm text-slate-500">
-        Rola możesz ją zmienić w panelu bocznym (tryb demo). Po wdrożeniu logowania rola będzie
-        pobierana z konta użytkownika, a backend zweryfikuje te same uprawnienia.
+    <AppCard v-if="isDirector" :title="DASHBOARD_SECTION_LABELS.directorOverview">
+      <p class="text-sm text-slate-700">
+        Odpowiadasz za {{ homesScopeLabel }} —
+        <span class="font-medium text-slate-900">{{ seniorCounts.active }}</span>
+        aktywnych seniorów. Obłożenie pokoi:
+        <span class="font-medium text-slate-900">{{ roomOccupancy.percent }}%</span>,
+        {{ roomOccupancy.free }} {{ freePlacesLabel }}.
+      </p>
+
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full min-w-[280px] text-left text-sm">
+          <caption class="sr-only">
+            Liczba aktywnych seniorów w poszczególnych domach seniora
+          </caption>
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-500">
+              <th scope="col" class="pb-2 pr-4 font-medium">Dom seniora</th>
+              <th scope="col" class="pb-2 font-medium text-right">Aktywni seniorzy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in seniorsPerHome"
+              :key="row.homeId"
+              class="border-b border-slate-100 last:border-0"
+            >
+              <td class="py-2 pr-4 text-slate-800">{{ row.homeName }}</td>
+              <td class="py-2 text-right font-medium text-slate-900">{{ row.active }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <AlertMessage v-if="qualityCounts.total > 0" variant="warning" class="mt-4">
+        <p class="font-medium">
+          Do rozwiązania: {{ formatProblemsCount(qualityCounts.total) }} ({{
+            formatQualitySubtitle(qualityCounts)
+          }})
+        </p>
+        <ul class="mt-2 list-inside list-disc space-y-1">
+          <li v-for="issue in dataQualityIssues" :key="issue.id">
+            {{ issue.issue }} — {{ issue.entity }}
+          </li>
+        </ul>
+        <RouterLink
+          :to="{ name: 'report-data-quality' }"
+          class="mt-3 inline-block font-medium text-amber-900 underline hover:no-underline"
+        >
+          Przejdź do raportu jakości danych
+        </RouterLink>
+      </AlertMessage>
+
+      <p v-else class="mt-4 text-sm text-slate-500">
+        Ewidencja jest spójna — raport jakości danych nie wykazał problemów.
       </p>
     </AppCard>
+
+    <p class="text-xs text-slate-500">{{ DEMO_FOOTER }}</p>
   </div>
 </template>
