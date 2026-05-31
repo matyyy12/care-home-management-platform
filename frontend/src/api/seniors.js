@@ -1,21 +1,10 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+import { apiGet, apiPost } from '@/api/client'
+import { mapSeniorToCreateRequest } from '@/api/mappers/seniorMapper'
 
 export async function fetchSeniors() {
-  const response = await fetch(`${API_BASE}/api/seniors`)
-  if (!response.ok) {
-    throw new Error('Nie udało się pobrać listy seniorów')
-  }
-  return response.json()
+  return apiGet('/api/seniors')
 }
 
-export async function createSenior(senior) {
-  const response = await fetch(`${API_BASE}/api/seniors`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(senior),
-  })
-  if (!response.ok) {
-    throw new Error('Nie udało się dodać seniora')
-  }
-  return response.json()
+export async function createSenior(form) {
+  return apiPost('/api/seniors', mapSeniorToCreateRequest(form))
 }

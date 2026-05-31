@@ -1,7 +1,7 @@
 <script setup>
-import SeniorsView from './components/SeniorsView.vue'
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <SeniorsView />
+  <RouterView />
 </template>
