@@ -78,8 +78,7 @@ class PostOfficeControllerTest {
         PostOffice postOffice = postOffice(1L, "30-001", "Krakow");
         when(postOfficeService.updatePostOffice(any(), eq(1L))).thenReturn(postOffice);
 
-        mockMvc.perform(patch("/api/post-offices")
-                        .param("id", "1")
+        mockMvc.perform(patch("/api/post-offices/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -95,7 +94,7 @@ class PostOfficeControllerTest {
 
     @Test
     void deletePostOfficeShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/post-offices").param("id", "1"))
+        mockMvc.perform(delete("/api/post-offices/1"))
                 .andExpect(status().isNoContent());
 
         verify(postOfficeService).deletePostOffice(1L);

@@ -32,15 +32,15 @@ public class PositionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(position));
     }
 
-    @PatchMapping
+    @PatchMapping("/{id}")
     public ResponseEntity<?> updatePosition(@Valid @RequestBody PositionUpdateRequest positionUpdateRequest,
-                                            @RequestParam Long id) {
+                                            @PathVariable Long id) {
         Position position = positionService.updatePosition(positionUpdateRequest, id);
         return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(position));
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deletePosition(@RequestParam Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePosition(@PathVariable Long id) {
         positionService.deletePosition(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

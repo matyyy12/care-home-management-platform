@@ -33,15 +33,15 @@ public class OwnerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(owner));
     }
 
-    @PatchMapping
+    @PatchMapping("/{id}")
     public ResponseEntity<?> updateOwner(@Valid @RequestBody OwnerUpdateRequest ownerUpdateRequest,
-                                         @RequestParam Long id) {
+                                         @PathVariable Long id) {
         Owner owner = ownerService.updateOwner(id, ownerUpdateRequest);
         return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(owner));
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deleteOwner(@RequestParam Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteOwner(@PathVariable Long id) {
         ownerService.deleteOwner(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

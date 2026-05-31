@@ -88,8 +88,7 @@ class AddressControllerTest {
         Address address = address(1L, "Krakow", "Polna", "15", postOffice(2L, "30-001", "Krakow"));
         when(addressService.updateAddress(any(), eq(1L))).thenReturn(address);
 
-        mockMvc.perform(patch("/api/addresses")
-                        .param("id", "1")
+        mockMvc.perform(patch("/api/addresses/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -111,7 +110,7 @@ class AddressControllerTest {
 
     @Test
     void deleteAddressShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/addresses").param("id", "1"))
+        mockMvc.perform(delete("/api/addresses/1"))
                 .andExpect(status().isNoContent());
 
         verify(addressService).deleteAddress(1L);

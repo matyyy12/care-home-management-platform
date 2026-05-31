@@ -1,20 +1,18 @@
 package com.bd2.seniorhomeapp.seniorHome.entity;
 
 import com.bd2.seniorhomeapp.address.entity.Address;
-import com.bd2.seniorhomeapp.owner.entity.Owner;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
-import java.util.Set;
 
-// TODO: Maybe add custom validator for website
 @Entity
 @Getter
 @Setter
@@ -27,28 +25,29 @@ public class SeniorHome {
     private Long id;
 
     @NotBlank
-    @Column(nullable = false)
+    @Size(max = 20)
+    @Column(nullable = false, length = 20)
     private String name;
 
     @NotBlank
-    @Column(nullable = false)
+    @Size(max = 15)
+    @Column(nullable = false, length = 15)
     private String phoneNumber;
 
     @Email
+    @Size(max = 40)
+    @Column(length = 40)
     private String email;
 
-    @NotBlank
+    @Size(max = 40)
+    @Column(length = 40)
     private String website;
 
     @NotNull
     @Column(nullable = false)
     private Date establishedDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "address_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "address_id", nullable = false)
     private Address address;
-
-    @OneToMany(mappedBy = "seniorHome", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Owner> owners;
-
 }
