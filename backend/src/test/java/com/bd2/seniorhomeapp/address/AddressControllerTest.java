@@ -70,7 +70,10 @@ class AddressControllerTest {
                                   "city": "Warszawa",
                                   "street": "Polna",
                                   "number": "10",
-                                  "postOfficeId": 2
+                                  "postOffice": {
+                                    "postalCode": "00-001",
+                                    "city": "Warszawa"
+                                  }
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -91,7 +94,11 @@ class AddressControllerTest {
                         .content("""
                                 {
                                   "city": "Krakow",
-                                  "number": "15"
+                                  "number": "15",
+                                  "postOffice": {
+                                    "postalCode": "30-001",
+                                    "city": "Krakow"
+                                  }
                                 }
                                 """))
                 .andExpect(status().isOk())

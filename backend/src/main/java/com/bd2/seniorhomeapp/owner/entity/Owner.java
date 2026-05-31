@@ -3,6 +3,7 @@ package com.bd2.seniorhomeapp.owner.entity;
 import com.bd2.seniorhomeapp.address.entity.Address;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,11 +24,13 @@ public class Owner {
     private Long id;
 
     @NotBlank
+    @Size(max = 30)
     @Column(nullable = false)
     private String name;
 
     @NotBlank
-    @Column
+    @Size(max = 30)
+    @Column(nullable = false)
     private String surname;
 
     @ManyToOne(fetch = FetchType.LAZY)
