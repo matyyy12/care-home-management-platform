@@ -2,10 +2,7 @@ package com.bd2.seniorhomeapp.seniorHome.dto.request;
 
 import com.bd2.seniorhomeapp.address.dto.request.AddressRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.Date;
 
@@ -24,6 +21,7 @@ public record SeniorHomeRequest (
         String email,
 
         @Size(max = 40)
+        @Pattern(regexp = "^(https?://)?(www\\.)?[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}.*$")
         String website,
 
         @NotNull

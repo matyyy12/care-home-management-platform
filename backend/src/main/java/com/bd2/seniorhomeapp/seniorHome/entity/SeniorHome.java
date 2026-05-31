@@ -2,10 +2,7 @@ package com.bd2.seniorhomeapp.seniorHome.entity;
 
 import com.bd2.seniorhomeapp.address.entity.Address;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,6 +38,7 @@ public class SeniorHome {
 
     @Size(max = 40)
     @Column(length = 40)
+    @Pattern(regexp = "^(https?://)?(www\\.)?[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}.*$")
     private String website;
 
     @NotNull

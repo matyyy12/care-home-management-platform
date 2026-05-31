@@ -92,6 +92,30 @@ class SeniorHomeControllerTest {
     }
 
     @Test
+    void createHomeShouldReturnBadRequestWhenWebsiteIsInvalid() throws Exception {
+        mockMvc.perform(post("/api/senior-home")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Dom Seniora",
+                                  "phoneNumber": "123456789",
+                                  "website": "niepoprawna-strona",
+                                  "establishedDate": "2020-01-01",
+                                  "address": {
+                                    "city": "Warszawa",
+                                    "street": "Polna",
+                                    "number": "10",
+                                    "postOffice": {
+                                      "postalCode": "00-001",
+                                      "city": "Warszawa"
+                                    }
+                                  }
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void updateHomeShouldReturnUpdatedSeniorHomeResponse() throws Exception {
         SeniorHome seniorHome = seniorHome(1L, "Nowy Dom", "987654321", "nowy@dom.pl", null, address());
         when(seniorHomeService.updateHome(any(), eq(1L))).thenReturn(seniorHome);
@@ -110,6 +134,18 @@ class SeniorHomeControllerTest {
                 .andExpect(jsonPath("$.phoneNumber").value("987654321"));
 
         verify(seniorHomeService).updateHome(any(), eq(1L));
+    }
+
+    @Test
+    void updateHomeShouldReturnBadRequestWhenWebsiteIsInvalid() throws Exception {
+        mockMvc.perform(patch("/api/senior-home/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "website": "niepoprawna-strona"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
