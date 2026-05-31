@@ -65,5 +65,5 @@ cd backend
 ### Backend tests in Docker
 
 ```sh
-docker compose --profile test run --rm backend-test
+docker compose --profile test run --rm --build backend-test
 ```
