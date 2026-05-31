@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -7,15 +7,26 @@ import FormField from '@/components/ui/FormField.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AlertMessage from '@/components/ui/AlertMessage.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
-import { useLocalCollection } from '@/composables/useLocalCollection'
+import { useAddressBook } from '@/composables/useAddressBook'
+import { sourceNotice } from '@/composables/apiMode'
 
 const { canWrite } = usePermissions('addresses')
-import { addresses as initialAddresses, postOffices as initialPostOffices } from '@/mock/data'
+const {
+  addresses,
+  postOffices,
+  postOptions,
+  loading,
+  saving,
+  error,
+  usingMock,
+  addAddress,
+  addPostOffice,
+} = useAddressBook()
 
-const { items: addresses, add: addAddress } = useLocalCollection(initialAddresses)
-const { items: postOffices, add: addPostOffice } = useLocalCollection(initialPostOffices)
+const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const addressColumns = [
   { key: 'city', label: 'Miasto' },
@@ -32,31 +43,13 @@ const postColumns = [
 const addressForm = ref({ city: '', street: '', apartmentNumber: '', postOfficeId: '' })
 const postForm = ref({ postalCode: '', city: '' })
 
-const postOptions = ref(
-  initialPostOffices.map((p) => ({
-    value: p.id,
-    label: `${p.postalCode} ${p.city}`,
-  })),
-)
-
-function submitAddress() {
-  const post = postOffices.value.find((p) => String(p.id) === String(addressForm.value.postOfficeId))
-  addAddress({
-    city: addressForm.value.city,
-    street: addressForm.value.street,
-    apartmentNumber: addressForm.value.apartmentNumber,
-    postOffice: post ? `${post.postalCode} ${post.city}` : '—',
-  })
+async function submitAddress() {
+  await addAddress(addressForm.value)
   addressForm.value = { city: '', street: '', apartmentNumber: '', postOfficeId: '' }
 }
 
-function submitPostOffice() {
-  addPostOffice({ ...postForm.value })
-  const added = postOffices.value[postOffices.value.length - 1]
-  postOptions.value.push({
-    value: added.id,
-    label: `${added.postalCode} ${added.city}`,
-  })
+async function submitPostOffice() {
+  await addPostOffice(postForm.value)
   postForm.value = { postalCode: '', city: '' }
 }
 </script>
@@ -68,9 +61,14 @@ function submitPostOffice() {
       description="Rejestr adresów z powiązaniem do poczty — ograniczenie duplikatów danych adresowych."
     />
 
+    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
+    <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
+
     <ReadOnlyNotice v-if="!canWrite" />
 
-    <div class="grid gap-8 lg:grid-cols-2">
+    <p v-if="loading" class="text-sm text-slate-500">Ładowanie…</p>
+
+    <div v-else class="grid gap-8 lg:grid-cols-2">
       <AppCard title="Poczty">
         <form v-if="canWrite" class="mb-4 grid gap-3" @submit.prevent="submitPostOffice">
           <FormField label="Kod pocztowy">
@@ -79,7 +77,9 @@ function submitPostOffice() {
           <FormField label="Miejscowość">
             <AppInput v-model="postForm.city" required />
           </FormField>
-          <AppButton type="submit" size="sm">Dodaj pocztę</AppButton>
+          <AppButton type="submit" size="sm" :disabled="saving">
+            {{ saving ? 'Zapisywanie…' : 'Dodaj pocztę' }}
+          </AppButton>
         </form>
         <DataTable :columns="postColumns" :rows="postOffices" />
       </AppCard>
@@ -98,7 +98,9 @@ function submitPostOffice() {
           <FormField label="Poczta">
             <AppSelect v-model="addressForm.postOfficeId" :options="postOptions" required />
           </FormField>
-          <AppButton type="submit" size="sm">Dodaj adres</AppButton>
+          <AppButton type="submit" size="sm" :disabled="saving">
+            {{ saving ? 'Zapisywanie…' : 'Dodaj adres' }}
+          </AppButton>
         </form>
         <DataTable :columns="addressColumns" :rows="addresses" />
       </AppCard>

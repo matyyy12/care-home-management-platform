@@ -11,15 +11,14 @@ import AppBadge from '@/components/ui/AppBadge.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
-import { useLocalCollection } from '@/composables/useLocalCollection'
-
-const { canWrite, role } = usePermissions('seniors')
-import { seniors as initialSeniors, seniorHomes } from '@/mock/data'
+import { useSeniors } from '@/composables/useSeniors'
+import { sourceNotice } from '@/composables/apiMode'
 import { GENDER_OPTIONS, SENIOR_STATUS_LABELS } from '@/constants/enums'
 
-const { items: seniorList, add } = useLocalCollection(initialSeniors)
+const { canWrite, role } = usePermissions('seniors')
+const { seniorList, homeOptions, loading, saving, error, usingMock, addSenior } = useSeniors()
 
-const homeOptions = seniorHomes.map((h) => ({ value: h.id, label: h.name }))
+const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const columns = [
   { key: 'lastName', label: 'Nazwisko' },
@@ -43,37 +42,24 @@ const form = ref({
 
 const formNotice = ref('')
 
-const selectedHomeName = computed(() => {
-  const home = seniorHomes.find((h) => String(h.id) === String(form.value.seniorHomeId))
-  return home?.name ?? ''
-})
-
-function handleSubmit() {
-  add({
-    firstName: form.value.firstName,
-    lastName: form.value.lastName,
-    pesel: form.value.pesel,
-    birthDate: form.value.birthDate,
-    gender: form.value.gender,
-    seniorHome: selectedHomeName.value,
-    accommodationDate: form.value.accommodationDate,
-    dischargeDate: null,
-    status: 'ACTIVE',
-    roomNumber: '—',
-    guardians: '—',
-    diseases: form.value.diseases,
-  })
-  formNotice.value =
-    'Senior zapisany lokalnie. Przypisanie pokoju i opiekuna (operacja atomowa) zostanie obsłużone po podłączeniu API.'
-  form.value = {
-    firstName: '',
-    lastName: '',
-    pesel: '',
-    birthDate: '',
-    gender: '',
-    seniorHomeId: '',
-    accommodationDate: '',
-    diseases: '',
+async function handleSubmit() {
+  try {
+    const result = await addSenior(form.value)
+    formNotice.value = result.savedLocally
+      ? 'Senior zapisany lokalnie (tryb demo). Przypisanie pokoju i opiekuna zostanie obsłużone po pełnej integracji API.'
+      : 'Senior zapisany w bazie danych.'
+    form.value = {
+      firstName: '',
+      lastName: '',
+      pesel: '',
+      birthDate: '',
+      gender: '',
+      seniorHomeId: '',
+      accommodationDate: '',
+      diseases: '',
+    }
+  } catch {
+    formNotice.value = ''
   }
 }
 
@@ -89,7 +75,9 @@ function statusBadge(row) {
       description="Dane osobowe, PESEL, choroby, zakwaterowanie oraz przypisania do pokoju i opiekunów."
     />
 
-    <AlertMessage v-if="formNotice" variant="info">{{ formNotice }}</AlertMessage>
+    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
+    <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
+    <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
 
     <ReadOnlyNotice v-if="!canWrite">
       <template v-if="role === 'MEDICAL'">
@@ -125,14 +113,17 @@ function statusBadge(row) {
           <AppInput v-model="form.diseases" placeholder="np. cukrzyca, nadciśnienie" />
         </FormField>
         <div class="sm:col-span-2">
-          <AppButton type="submit">Zapisz (lokalnie)</AppButton>
+          <AppButton type="submit" :disabled="saving">
+            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+          </AppButton>
         </div>
       </form>
     </AppCard>
 
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-slate-900">Lista seniorów</h2>
-      <DataTable :columns="columns" :rows="seniorList">
+      <p v-if="loading" class="text-sm text-slate-500">Ładowanie…</p>
+      <DataTable v-else :columns="columns" :rows="seniorList">
         <template #cell-lastName="{ row }">
           <span class="font-medium">{{ row.lastName }}</span>
         </template>

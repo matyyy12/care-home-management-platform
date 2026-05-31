@@ -18,6 +18,7 @@ export const GENDER_OPTIONS = [
 export const SENIOR_STATUS_LABELS = {
   ACTIVE: 'Aktywny',
   DECEASED: 'Zmarły',
+  DISCHARGED: 'Wypisany',
 }
 
 export const EMPLOYMENT_STATUS_LABELS = {
