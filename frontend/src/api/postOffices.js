@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '@/api/client'
+import { apiGet, apiPost } from '@/api/request'
 import { mapPostOfficeToCreateRequest } from '@/api/mappers/addressMapper'
 
 export async function fetchPostOffices() {

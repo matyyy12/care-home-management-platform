@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '@/api/client'
+import { apiGet, apiPost } from '@/api/request'
 import { mapSeniorToCreateRequest } from '@/api/mappers/seniorMapper'
 
 export async function fetchSeniors() {

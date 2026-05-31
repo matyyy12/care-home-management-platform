@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '@/api/client'
+import { apiGet, apiPost } from '@/api/request'
 import { mapAddressToCreateRequest } from '@/api/mappers/addressMapper'
 
 export async function fetchAddresses() {

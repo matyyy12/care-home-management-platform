@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '@/api/client'
+import { apiGet, apiPost } from '@/api/request'
 import { mapPositionToCreateRequest } from '@/api/mappers/positionMapper'
 
 export async function fetchPositions() {

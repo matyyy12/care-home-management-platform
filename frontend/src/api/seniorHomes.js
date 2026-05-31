@@ -1,5 +1,5 @@
-import { apiGet } from '@/api/client'
+import { apiGet } from '@/api/request'
 
 export async function fetchSeniorHomes() {
-  return apiGet('/api/senior-homes')
+  return apiGet('/api/senior-home')
 }
