@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -10,14 +10,18 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
+import { useHomeScope } from '@/composables/useHomeScope'
 import { useLocalCollection } from '@/composables/useLocalCollection'
-
-const { canWrite } = usePermissions('employees')
+import { useAuthStore } from '@/stores/auth'
 import { employees as initialEmployees, seniorHomes, positions } from '@/mock/data'
 
-const { items: employeeList, add } = useLocalCollection(initialEmployees)
+const { canWrite } = usePermissions('employees')
+const auth = useAuthStore()
+const { filterItems, scopedHomeSelectOptions } = useHomeScope()
+const { items: allEmployees, add } = useLocalCollection(initialEmployees)
 
-const homeOptions = seniorHomes.map((h) => ({ value: h.id, label: h.name }))
+const employeeList = computed(() => filterItems(allEmployees.value))
+const homeOptions = computed(() => scopedHomeSelectOptions(seniorHomes))
 const positionOptions = positions.map((p) => ({ value: p.id, label: p.name }))
 
 const columns = [
@@ -44,6 +48,16 @@ const form = ref({
   isMedical: 'false',
 })
 
+watch(
+  () => [auth.isHomeScoped, auth.assignedSeniorHomeId],
+  () => {
+    if (auth.isHomeScoped) {
+      form.value.seniorHomeId = auth.assignedSeniorHomeId
+    }
+  },
+  { immediate: true },
+)
+
 const selectedLabels = computed(() => ({
   home: seniorHomes.find((h) => String(h.id) === String(form.value.seniorHomeId))?.name ?? '',
   position: positions.find((p) => String(p.id) === String(form.value.positionId))?.name ?? '',
@@ -67,7 +81,7 @@ function handleSubmit() {
   form.value = {
     firstName: '',
     lastName: '',
-    seniorHomeId: '',
+    seniorHomeId: auth.isHomeScoped ? auth.assignedSeniorHomeId : '',
     positionId: '',
     phone: '',
     email: '',
@@ -95,7 +109,12 @@ function handleSubmit() {
           <AppInput v-model="form.lastName" required />
         </FormField>
         <FormField label="Dom seniora" required>
-          <AppSelect v-model="form.seniorHomeId" :options="homeOptions" required />
+          <AppSelect
+            v-model="form.seniorHomeId"
+            :options="homeOptions"
+            :disabled="auth.isHomeScoped"
+            required
+          />
         </FormField>
         <FormField label="Stanowisko" required>
           <AppSelect v-model="form.positionId" :options="positionOptions" required />

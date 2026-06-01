@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -6,9 +7,12 @@ import AppBadge from '@/components/ui/AppBadge.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
+import { useHomeScope } from '@/composables/useHomeScope'
 import { assignments } from '@/mock/data'
 
 const { canWrite } = usePermissions('assignments')
+const { filterItems } = useHomeScope()
+const assignmentList = computed(() => filterItems(assignments))
 
 const columns = [
   { key: 'label', label: 'Typ przypisania' },
@@ -41,7 +45,7 @@ const rules = [
     </AlertMessage>
 
     <AppCard title="Aktywne przypisania (demo)">
-      <DataTable :columns="columns" :rows="assignments">
+      <DataTable :columns="columns" :rows="assignmentList">
         <template #cell-label="{ row }">
           <AppBadge variant="neutral">{{ row.label }}</AppBadge>
         </template>

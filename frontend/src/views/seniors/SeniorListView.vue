@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -12,10 +12,12 @@ import AlertMessage from '@/components/ui/AlertMessage.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { useSeniors } from '@/composables/useSeniors'
+import { useAuthStore } from '@/stores/auth'
 import { sourceNotice } from '@/composables/apiMode'
 import { GENDER_OPTIONS, SENIOR_STATUS_LABELS } from '@/constants/enums'
 
 const { canWrite, role } = usePermissions('seniors')
+const auth = useAuthStore()
 const { seniorList, homeOptions, loading, saving, error, usingMock, addSenior } = useSeniors()
 
 const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
@@ -40,6 +42,16 @@ const form = ref({
   diseases: '',
 })
 
+watch(
+  () => [auth.isHomeScoped, auth.assignedSeniorHomeId],
+  () => {
+    if (auth.isHomeScoped) {
+      form.value.seniorHomeId = auth.assignedSeniorHomeId
+    }
+  },
+  { immediate: true },
+)
+
 const formNotice = ref('')
 
 async function handleSubmit() {
@@ -54,7 +66,7 @@ async function handleSubmit() {
       pesel: '',
       birthDate: '',
       gender: '',
-      seniorHomeId: '',
+      seniorHomeId: auth.isHomeScoped ? auth.assignedSeniorHomeId : '',
       accommodationDate: '',
       diseases: '',
     }
@@ -107,7 +119,12 @@ function statusBadge(row) {
           <AppInput v-model="form.accommodationDate" type="date" required />
         </FormField>
         <FormField label="Dom seniora" required>
-          <AppSelect v-model="form.seniorHomeId" :options="homeOptions" required />
+          <AppSelect
+            v-model="form.seniorHomeId"
+            :options="homeOptions"
+            :disabled="auth.isHomeScoped"
+            required
+          />
         </FormField>
         <FormField label="Choroby" class="sm:col-span-2">
           <AppInput v-model="form.diseases" placeholder="np. cukrzyca, nadciśnienie" />

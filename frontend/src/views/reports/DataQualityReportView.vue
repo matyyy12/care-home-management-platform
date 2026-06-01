@@ -4,7 +4,10 @@ import DataTable from '@/components/ui/DataTable.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { computed } from 'vue'
+import { useHomeScope } from '@/composables/useHomeScope'
 import { dataQualityIssues } from '@/mock/data'
+
+const { filterItems } = useHomeScope()
 
 const columns = [
   { key: 'category', label: 'Obszar' },
@@ -12,7 +15,7 @@ const columns = [
   { key: 'entity', label: 'Obiekt' },
 ]
 
-const issues = computed(() => dataQualityIssues)
+const issues = computed(() => filterItems(dataQualityIssues))
 
 function severityVariant(severity) {
   if (severity === 'error') return 'danger'

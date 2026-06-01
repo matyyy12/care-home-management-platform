@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -11,15 +11,19 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
+import { useHomeScope } from '@/composables/useHomeScope'
 import { useLocalCollection } from '@/composables/useLocalCollection'
-
-const { canWrite } = usePermissions('activities')
+import { useAuthStore } from '@/stores/auth'
 import { activities as initialActivities, seniorHomes } from '@/mock/data'
 import { ACTIVITY_TYPES } from '@/constants/enums'
 
-const { items: activityList, add } = useLocalCollection(initialActivities)
+const { canWrite } = usePermissions('activities')
+const auth = useAuthStore()
+const { filterItems, scopedHomeSelectOptions } = useHomeScope()
+const { items: allActivities, add } = useLocalCollection(initialActivities)
 
-const homeOptions = seniorHomes.map((h) => ({ value: h.id, label: h.name }))
+const activityList = computed(() => filterItems(allActivities.value))
+const homeOptions = computed(() => scopedHomeSelectOptions(seniorHomes))
 const typeLabel = Object.fromEntries(ACTIVITY_TYPES.map((t) => [t.value, t.label]))
 
 const columns = [
@@ -42,6 +46,16 @@ const form = ref({
   description: '',
 })
 
+watch(
+  () => [auth.isHomeScoped, auth.assignedSeniorHomeId],
+  () => {
+    if (auth.isHomeScoped) {
+      form.value.seniorHomeId = auth.assignedSeniorHomeId
+    }
+  },
+  { immediate: true },
+)
+
 function handleSubmit() {
   const home = seniorHomes.find((h) => String(h.id) === String(form.value.seniorHomeId))
   add({
@@ -53,7 +67,13 @@ function handleSubmit() {
     instructors: 0,
     participants: 0,
   })
-  form.value = { name: '', type: '', price: 0, seniorHomeId: '', description: '' }
+  form.value = {
+    name: '',
+    type: '',
+    price: 0,
+    seniorHomeId: auth.isHomeScoped ? auth.assignedSeniorHomeId : '',
+    description: '',
+  }
 }
 
 function typeVariant(type) {
@@ -87,7 +107,12 @@ function typeVariant(type) {
           <AppInput v-model="form.price" type="number" min="0" step="0.01" />
         </FormField>
         <FormField label="Dom seniora" required>
-          <AppSelect v-model="form.seniorHomeId" :options="homeOptions" required />
+          <AppSelect
+            v-model="form.seniorHomeId"
+            :options="homeOptions"
+            :disabled="auth.isHomeScoped"
+            required
+          />
         </FormField>
         <FormField label="Opis" class="sm:col-span-2">
           <AppTextarea v-model="form.description" />

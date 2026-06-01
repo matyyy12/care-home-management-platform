@@ -2,15 +2,20 @@ import { computed, onMounted, ref } from 'vue'
 import { fetchSeniors, createSenior } from '@/api/seniors'
 import { fetchSeniorHomes } from '@/api/seniorHomes'
 import {
+  mapSeniorHomeFromApi,
+  mapSeniorHomeFromMock,
+} from '@/api/mappers/seniorHomeMapper'
+import {
   buildHomeNameMap,
   mapSeniorFromApi,
   mapSeniorFromMock,
 } from '@/api/mappers/seniorMapper'
 import { apiEnabled } from '@/composables/apiMode'
+import { useHomeScope } from '@/composables/useHomeScope'
 import { seniors as mockSeniors, seniorHomes as mockSeniorHomes } from '@/mock/data'
 
 function loadMockHomes() {
-  return mockSeniorHomes.map((home) => ({ id: home.id, name: home.name }))
+  return mockSeniorHomes.map(mapSeniorHomeFromMock)
 }
 
 function loadMockSeniors(homeNames) {
@@ -18,12 +23,19 @@ function loadMockSeniors(homeNames) {
 }
 
 export function useSeniors() {
-  const seniorList = ref([])
-  const seniorHomes = ref([])
+  const { filterItems, isScoped, homeId } = useHomeScope()
+  const allSeniors = ref([])
+  const allSeniorHomes = ref([])
   const loading = ref(false)
   const saving = ref(false)
   const error = ref(null)
   const usingMock = ref(!apiEnabled)
+
+  const seniorList = computed(() => filterItems(allSeniors.value))
+  const seniorHomes = computed(() => {
+    if (!isScoped.value) return allSeniorHomes.value
+    return allSeniorHomes.value.filter((home) => Number(home.id) === Number(homeId.value))
+  })
 
   const homeOptions = computed(() =>
     seniorHomes.value.map((home) => ({ value: home.id, label: home.name })),
@@ -31,9 +43,9 @@ export function useSeniors() {
 
   function applyMockData() {
     const homes = loadMockHomes()
-    seniorHomes.value = homes
+    allSeniorHomes.value = homes
     const homeNames = buildHomeNameMap(homes)
-    seniorList.value = loadMockSeniors(homeNames)
+    allSeniors.value = loadMockSeniors(homeNames)
     usingMock.value = true
   }
 
@@ -49,9 +61,9 @@ export function useSeniors() {
 
     try {
       const [homes, seniors] = await Promise.all([fetchSeniorHomes(), fetchSeniors()])
-      seniorHomes.value = homes
+      allSeniorHomes.value = homes.map(mapSeniorHomeFromApi)
       const homeNames = buildHomeNameMap(homes)
-      seniorList.value = seniors.map((dto) => mapSeniorFromApi(dto, homeNames))
+      allSeniors.value = seniors.map((dto) => mapSeniorFromApi(dto, homeNames))
       usingMock.value = false
     } catch (e) {
       error.value = e.message ?? 'Nie udało się połączyć z API'
@@ -64,10 +76,10 @@ export function useSeniors() {
   async function addSenior(form) {
     if (usingMock.value) {
       const home = seniorHomes.value.find((h) => String(h.id) === String(form.seniorHomeId))
-      seniorList.value.push(
+      allSeniors.value.push(
         mapSeniorFromMock(
           {
-            id: Math.max(0, ...seniorList.value.map((s) => Number(s.id) || 0)) + 1,
+            id: Math.max(0, ...allSeniors.value.map((s) => Number(s.id) || 0)) + 1,
             firstName: form.firstName,
             lastName: form.lastName,
             pesel: form.pesel,

@@ -1,21 +1,53 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import FormField from '@/components/ui/FormField.vue'
 import AppInput from '@/components/ui/AppInput.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AppModal from '@/components/ui/AppModal.vue'
+import AlertMessage from '@/components/ui/AlertMessage.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
-import { useLocalCollection } from '@/composables/useLocalCollection'
+import { useSeniorHomes } from '@/composables/useSeniorHomes'
+import { useOwners } from '@/composables/useOwners'
+import { attachOwnersToHomes } from '@/api/mappers/ownerMapper'
+import { sourceNotice } from '@/composables/apiMode'
 
 const { canWrite } = usePermissions('senior-homes')
-import { seniorHomes as initialHomes } from '@/mock/data'
+const { homeList, loading: homesLoading, saving: homesSaving, error: homesError, usingMock: homesUsingMock, addHome } =
+  useSeniorHomes()
+const {
+  ownerList,
+  loading: ownersLoading,
+  saving: ownersSaving,
+  error: ownersError,
+  usingMock: ownersUsingMock,
+  reload: reloadOwners,
+  addOwner,
+} = useOwners(() => homeList.value)
 
-const { items: homes, add } = useLocalCollection(initialHomes)
+watch(homeList, () => {
+  if (!homesUsingMock.value && !ownersUsingMock.value) {
+    reloadOwners()
+  }
+})
 
-const columns = [
+const usingMock = computed(() => homesUsingMock.value || ownersUsingMock.value)
+const loading = computed(() => homesLoading.value || ownersLoading.value)
+const saving = computed(() => homesSaving.value || ownersSaving.value)
+const error = computed(() => homesError.value || ownersError.value)
+const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
+
+const homeOptions = computed(() =>
+  homeList.value.map((home) => ({ value: home.id, label: home.name })),
+)
+
+const displayHomes = computed(() => attachOwnersToHomes(homeList.value, ownerList.value))
+
+const homeColumns = [
   { key: 'name', label: 'Nazwa' },
   { key: 'phone', label: 'Telefon' },
   { key: 'email', label: 'E-mail' },
@@ -27,22 +59,63 @@ const columns = [
   },
 ]
 
-const form = ref({
+const ownerColumns = [
+  { key: 'displayName', label: 'Imię i nazwisko' },
+  { key: 'seniorHome', label: 'Dom seniora' },
+  { key: 'addressLabel', label: 'Adres' },
+]
+
+const emptyHomeForm = () => ({
   name: '',
   phone: '',
   email: '',
   website: '',
+  foundedAt: new Date().toISOString().slice(0, 10),
+  city: '',
+  street: '',
+  apartmentNumber: '',
+  postalCode: '',
+  postOfficeCity: '',
 })
 
-function handleSubmit() {
-  add({
-    ...form.value,
-    foundedAt: new Date().toISOString().slice(0, 10),
-    addressLabel: '—',
-    owners: [],
-    website: form.value.website || '',
-  })
-  form.value = { name: '', phone: '', email: '', website: '' }
+const emptyOwnerForm = () => ({
+  name: '',
+  surname: '',
+  seniorHomeId: '',
+  city: '',
+  street: '',
+  apartmentNumber: '',
+  postalCode: '',
+  postOfficeCity: '',
+})
+
+const homeForm = ref(emptyHomeForm())
+const ownerForm = ref(emptyOwnerForm())
+const detailRow = ref(null)
+const detailOpen = computed(() => detailRow.value !== null)
+
+function openDetail(row) {
+  detailRow.value = row
+}
+
+function closeDetail() {
+  detailRow.value = null
+}
+
+function formatWebsite(url) {
+  const value = url?.trim()
+  if (!value) return null
+  return value.startsWith('http') ? value : `https://${value}`
+}
+
+async function handleHomeSubmit() {
+  await addHome(homeForm.value)
+  homeForm.value = emptyHomeForm()
+}
+
+async function handleOwnerSubmit() {
+  await addOwner(ownerForm.value)
+  ownerForm.value = emptyOwnerForm()
 }
 </script>
 
@@ -50,34 +123,152 @@ function handleSubmit() {
   <div class="space-y-8">
     <PageHeader
       title="Domy seniora"
-      description="Ewidencja domów seniora: dane kontaktowe, adres i właściciele."
+      description="Ewidencja domów seniora: dane kontaktowe, adres i właściciele przypisani do domu."
     />
+
+    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
+    <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
 
     <ReadOnlyNotice v-if="!canWrite" />
 
     <AppCard v-if="canWrite" title="Dodaj dom seniora">
-      <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleSubmit">
+      <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleHomeSubmit">
         <FormField label="Nazwa" required>
-          <AppInput v-model="form.name" required />
+          <AppInput v-model="homeForm.name" required />
         </FormField>
         <FormField label="Telefon" required>
-          <AppInput v-model="form.phone" type="tel" required />
+          <AppInput v-model="homeForm.phone" type="tel" required />
         </FormField>
-        <FormField label="E-mail" hint="Opcjonalnie — walidacja formatu po podłączeniu API">
-          <AppInput v-model="form.email" type="email" />
+        <FormField label="E-mail">
+          <AppInput v-model="homeForm.email" type="email" />
         </FormField>
         <FormField label="Strona WWW">
-          <AppInput v-model="form.website" type="url" placeholder="https://…" />
+          <AppInput v-model="homeForm.website" type="url" placeholder="https://…" />
+        </FormField>
+        <FormField label="Data założenia" required>
+          <AppInput v-model="homeForm.foundedAt" type="date" required />
+        </FormField>
+        <FormField label="Miasto" required>
+          <AppInput v-model="homeForm.city" required />
+        </FormField>
+        <FormField label="Ulica" required>
+          <AppInput v-model="homeForm.street" required />
+        </FormField>
+        <FormField label="Nr lokalu" required>
+          <AppInput v-model="homeForm.apartmentNumber" required />
+        </FormField>
+        <FormField label="Kod pocztowy" required>
+          <AppInput v-model="homeForm.postalCode" placeholder="00-000" required />
+        </FormField>
+        <FormField label="Miejscowość poczty" required>
+          <AppInput v-model="homeForm.postOfficeCity" required />
         </FormField>
         <div class="sm:col-span-2">
-          <AppButton type="submit">Zapisz (lokalnie)</AppButton>
+          <AppButton type="submit" :disabled="saving">
+            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+          </AppButton>
         </div>
       </form>
     </AppCard>
 
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-slate-900">Lista domów</h2>
-      <DataTable :columns="columns" :rows="homes" />
+      <p v-if="loading" class="text-sm text-slate-500">Ładowanie…</p>
+      <DataTable
+        v-else
+        clickable
+        :columns="homeColumns"
+        :rows="displayHomes"
+        @row-click="openDetail"
+      />
     </section>
+
+    <AppCard v-if="canWrite" title="Dodaj właściciela">
+      <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleOwnerSubmit">
+        <FormField label="Imię" required>
+          <AppInput v-model="ownerForm.name" required />
+        </FormField>
+        <FormField label="Nazwisko" required>
+          <AppInput v-model="ownerForm.surname" required />
+        </FormField>
+        <FormField label="Dom seniora" required>
+          <AppSelect v-model="ownerForm.seniorHomeId" :options="homeOptions" required />
+        </FormField>
+        <FormField label="Miasto" required>
+          <AppInput v-model="ownerForm.city" required />
+        </FormField>
+        <FormField label="Ulica" required>
+          <AppInput v-model="ownerForm.street" required />
+        </FormField>
+        <FormField label="Nr lokalu" required>
+          <AppInput v-model="ownerForm.apartmentNumber" required />
+        </FormField>
+        <FormField label="Kod pocztowy" required>
+          <AppInput v-model="ownerForm.postalCode" placeholder="00-000" required />
+        </FormField>
+        <FormField label="Miejscowość poczty" required>
+          <AppInput v-model="ownerForm.postOfficeCity" required />
+        </FormField>
+        <div class="sm:col-span-2">
+          <AppButton type="submit" :disabled="saving || homeOptions.length === 0">
+            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+          </AppButton>
+        </div>
+      </form>
+      <p v-if="homeOptions.length === 0" class="mt-2 text-sm text-slate-500">
+        Najpierw dodaj dom seniora, aby przypisać właściciela.
+      </p>
+    </AppCard>
+
+    <section class="space-y-3">
+      <h2 class="text-lg font-medium text-slate-900">Lista właścicieli</h2>
+      <p v-if="loading" class="text-sm text-slate-500">Ładowanie…</p>
+      <DataTable v-else :columns="ownerColumns" :rows="ownerList" />
+    </section>
+
+    <AppModal :open="detailOpen" :title="detailRow?.name ?? ''" @close="closeDetail">
+      <dl v-if="detailRow" class="space-y-3 text-sm">
+        <div>
+          <dt class="font-medium text-slate-700">Telefon</dt>
+          <dd class="mt-0.5 text-slate-800">{{ detailRow.phone || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">E-mail</dt>
+          <dd class="mt-0.5 text-slate-800">{{ detailRow.email || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">Strona WWW</dt>
+          <dd class="mt-0.5 text-slate-800">
+            <a
+              v-if="formatWebsite(detailRow.website)"
+              :href="formatWebsite(detailRow.website)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-emerald-700 hover:underline"
+            >
+              {{ detailRow.website }}
+            </a>
+            <span v-else>—</span>
+          </dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">Data założenia</dt>
+          <dd class="mt-0.5 text-slate-800">{{ detailRow.foundedAt || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">Adres</dt>
+          <dd class="mt-0.5 text-slate-800">{{ detailRow.addressLabel || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">Właściciele</dt>
+          <dd class="mt-0.5 text-slate-800">{{ detailRow.owners?.join(', ') || '—' }}</dd>
+        </div>
+      </dl>
+      <div class="mt-5">
+        <AppButton class="w-full justify-center" variant="ghost" @click="closeDetail">
+          Zamknij
+        </AppButton>
+      </div>
+    </AppModal>
   </div>
 </template>

@@ -1,9 +1,14 @@
 <script setup>
+import { computed } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import { useHomeScope } from '@/composables/useHomeScope'
 import { rooms } from '@/mock/data'
 import { ROOM_TYPES } from '@/constants/enums'
+
+const { filterItems } = useHomeScope()
+const roomList = computed(() => filterItems(rooms))
 
 const typeLabel = Object.fromEntries(ROOM_TYPES.map((t) => [t.value, t.label]))
 
@@ -45,7 +50,7 @@ const columns = [
       description="Pokoje mieszkalne, gabinety i sale gier — z limitami miejsc i wyposażeniem."
     />
 
-    <DataTable :columns="columns" :rows="rooms">
+    <DataTable :columns="columns" :rows="roomList">
       <template #cell-type="{ row }">
         <AppBadge variant="info">{{ typeLabel[row.type] }}</AppBadge>
       </template>

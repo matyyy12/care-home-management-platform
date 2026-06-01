@@ -4,7 +4,10 @@ defineProps({
   rows: { type: Array, default: () => [] },
   rowKey: { type: String, default: 'id' },
   emptyMessage: { type: String, default: 'Brak danych do wyświetlenia.' },
+  clickable: { type: Boolean, default: false },
 })
+
+defineEmits(['row-click'])
 
 function cellValue(row, column) {
   if (column.format) return column.format(row)
@@ -41,7 +44,13 @@ function cellValue(row, column) {
             {{ emptyMessage }}
           </td>
         </tr>
-        <tr v-for="row in rows" :key="row[rowKey]" class="hover:bg-slate-50/80">
+        <tr
+          v-for="row in rows"
+          :key="row[rowKey]"
+          class="hover:bg-slate-50/80"
+          :class="{ 'cursor-pointer': clickable }"
+          @click="clickable && $emit('row-click', row)"
+        >
           <td
             v-for="col in columns"
             :key="col.key"
@@ -52,7 +61,7 @@ function cellValue(row, column) {
               {{ cellValue(row, col) }}
             </slot>
           </td>
-          <td v-if="$slots.actions" class="px-4 py-3 text-right">
+          <td v-if="$slots.actions" class="px-4 py-3 text-right" @click.stop>
             <slot name="actions" :row="row" />
           </td>
         </tr>
