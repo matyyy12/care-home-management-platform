@@ -1,5 +1,3 @@
-import { buildHomeNameMap } from '@/api/mappers/seniorMapper'
-
 function formatAddressLabel({ city, street, number, postalCode }) {
   const streetPart = [street, number].filter(Boolean).join(' ')
   const parts = [city, streetPart ? `ul. ${streetPart}` : '', postalCode].filter(Boolean)
