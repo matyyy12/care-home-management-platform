@@ -19,6 +19,7 @@ import {
   statLinkLabel,
 } from '@/constants/dashboardCopy'
 import { useAuthStore } from '@/stores/auth'
+import { useHomeScope } from '@/composables/useHomeScope'
 import {
   computeRoomOccupancy,
   computeSeniorCounts,
@@ -30,17 +31,31 @@ import {
 } from '@/utils/dashboardMetrics'
 
 const auth = useAuthStore()
+const { filterItems, isScoped, homeName } = useHomeScope()
+
+const scopedSeniors = computed(() => filterItems(seniors))
+const scopedEmployees = computed(() => filterItems(employees))
+const scopedSeniorHomes = computed(() => {
+  if (!isScoped.value) return seniorHomes
+  return seniorHomes.filter((home) => home.name === homeName.value)
+})
+const scopedRoomOccupancyReport = computed(() => filterItems(roomOccupancyReport))
+const scopedQualityIssues = computed(() => filterItems(dataQualityIssues))
 
 const pageTitle = computed(() => dashboardTitle(auth.role, auth.roleLabel))
 const pageDescription = computed(() => dashboardDescription(auth.role, auth.roleLabel))
 
-const seniorCounts = computed(() => computeSeniorCounts(seniors))
-const roomOccupancy = computed(() => computeRoomOccupancy(roomOccupancyReport))
-const qualityCounts = computed(() => computeQualityCounts(dataQualityIssues))
-const seniorsPerHome = computed(() => computeSeniorsPerHome(seniors, seniorHomes))
+const seniorCounts = computed(() => computeSeniorCounts(scopedSeniors.value))
+const roomOccupancy = computed(() => computeRoomOccupancy(scopedRoomOccupancyReport.value))
+const qualityCounts = computed(() => computeQualityCounts(scopedQualityIssues.value))
+const seniorsPerHome = computed(() =>
+  computeSeniorsPerHome(scopedSeniors.value, scopedSeniorHomes.value),
+)
 
 const homesScopeLabel = computed(() =>
-  seniorHomes.length === 1 ? 'jednym domem seniora' : `${seniorHomes.length} domami seniora`,
+  scopedSeniorHomes.value.length === 1
+    ? 'jednym domem seniora'
+    : `${scopedSeniorHomes.value.length} domami seniora`,
 )
 
 const freePlacesLabel = computed(() =>
@@ -101,7 +116,7 @@ function buildDashboardStats() {
   if (auth.canRead('senior-homes')) {
     items.push({
       label: 'Domy seniora',
-      value: seniorHomes.length,
+      value: scopedSeniorHomes.value.length,
       subtitle: 'w ewidencji organizacyjnej',
       routeName: 'senior-homes',
       linkLabel: statLinkLabel('senior-homes'),
@@ -109,13 +124,13 @@ function buildDashboardStats() {
   }
 
   if (auth.canRead('employees')) {
-    const activeEmployees = computeActiveEmployees(employees)
+    const activeEmployees = computeActiveEmployees(scopedEmployees.value)
     items.push({
       label: 'Pracownicy',
       value: activeEmployees,
       subtitle:
-        activeEmployees < employees.length
-          ? `${employees.length - activeEmployees} zakończonych umów`
+        activeEmployees < scopedEmployees.value.length
+          ? `${scopedEmployees.value.length - activeEmployees} zakończonych umów`
           : 'Aktywni w ewidencji',
       routeName: 'employees',
       linkLabel: statLinkLabel('employees'),
@@ -213,7 +228,7 @@ const stats = computed(() => buildDashboardStats())
           }})
         </p>
         <ul class="mt-2 list-inside list-disc space-y-1">
-          <li v-for="issue in dataQualityIssues" :key="issue.id">
+          <li v-for="issue in scopedQualityIssues" :key="issue.id">
             {{ issue.issue }} — {{ issue.entity }}
           </li>
         </ul>
@@ -227,6 +242,16 @@ const stats = computed(() => buildDashboardStats())
 
       <p v-else class="mt-4 text-sm text-slate-500">
         Ewidencja jest spójna — raport jakości danych nie wykazał problemów.
+      </p>
+    </AppCard>
+
+    <AppCard v-else-if="isScoped" title="Twój dom seniora">
+      <p class="text-sm text-slate-700">
+        Przeglądasz dane domu
+        <span class="font-medium text-slate-900">{{ homeName }}</span>
+        — <span class="font-medium text-slate-900">{{ seniorCounts.active }}</span>
+        aktywnych seniorów, obłożenie pokoi
+        <span class="font-medium text-slate-900">{{ roomOccupancy.percent }}%</span>.
       </p>
     </AppCard>
 

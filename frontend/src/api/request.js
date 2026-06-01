@@ -65,3 +65,16 @@ export function apiPost(path, data) {
     data,
   })
 }
+
+export function apiPatch(path, data) {
+  return apiRequest(path, {
+    method: 'PATCH',
+    data,
+  })
+}
+
+export function apiDelete(path) {
+  return apiRequest(path, {
+    method: 'DELETE',
+  })
+}

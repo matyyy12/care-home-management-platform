@@ -1,8 +1,13 @@
 <script setup>
+import { computed } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import { useHomeScope } from '@/composables/useHomeScope'
 import { employeeWorkloadReport } from '@/mock/data'
+
+const { filterItems } = useHomeScope()
+const reportRows = computed(() => filterItems(employeeWorkloadReport))
 
 const columns = [
   { key: 'employee', label: 'Pracownik' },
@@ -27,7 +32,7 @@ const columns = [
       description="Zakres przydziałów — podopieczni, pomieszczenia i prowadzone zajęcia."
     />
 
-    <DataTable :columns="columns" :rows="employeeWorkloadReport">
+    <DataTable :columns="columns" :rows="reportRows">
       <template #cell-status="{ row }">
         <AppBadge :variant="row.status === 'Aktywny' ? 'success' : 'neutral'">
           {{ row.status }}

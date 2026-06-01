@@ -21,6 +21,42 @@ export const seniorHomes = [
   },
 ]
 
+export const owners = [
+  {
+    id: 1,
+    name: 'Jan',
+    surname: 'Kowalski',
+    seniorHomeId: 1,
+    city: 'Kraków',
+    street: 'Długa',
+    apartmentNumber: '5',
+    postalCode: '30-001',
+    postOfficeCity: 'Kraków',
+  },
+  {
+    id: 2,
+    name: 'Anna',
+    surname: 'Nowak',
+    seniorHomeId: 1,
+    city: 'Kraków',
+    street: 'Krótka',
+    apartmentNumber: '2',
+    postalCode: '30-001',
+    postOfficeCity: 'Kraków',
+  },
+  {
+    id: 3,
+    name: 'Piotr',
+    surname: 'Wiśniewski',
+    seniorHomeId: 2,
+    city: 'Warszawa',
+    street: 'Słoneczna',
+    apartmentNumber: '1',
+    postalCode: '00-001',
+    postOfficeCity: 'Warszawa',
+  },
+]
+
 export const postOffices = [
   { id: 1, postalCode: '30-001', city: 'Kraków' },
   { id: 2, postalCode: '00-001', city: 'Warszawa' },
@@ -78,6 +114,19 @@ export const employees = [
     specialization: 'Geriatria',
     salary: 6800,
   },
+  {
+    id: 3,
+    firstName: 'Tomasz',
+    lastName: 'Kamiński',
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+    position: 'Opiekun',
+    phone: '+48 500 500 600',
+    email: 't.kaminski@spokojna.pl',
+    hiredAt: '2019-07-01',
+    terminatedAt: null,
+    isMedical: false,
+    salary: 5100,
+  },
 ]
 
 export const seniors = [
@@ -110,6 +159,21 @@ export const seniors = [
     roomNumber: '102',
     guardians: 'Maria Lewandowska',
     diseases: 'Choroba wieńcowa',
+  },
+  {
+    id: 3,
+    firstName: 'Zofia',
+    lastName: 'Nowicka',
+    pesel: '35030311111',
+    birthDate: '1935-03-03',
+    gender: 'F',
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+    accommodationDate: '2024-01-10',
+    dischargeDate: null,
+    status: 'ACTIVE',
+    roomNumber: '201',
+    guardians: 'Tomasz Kamiński',
+    diseases: 'Artretyzm',
   },
 ]
 
@@ -159,6 +223,17 @@ export const rooms = [
     boardGames: 8,
     hasRadio: true,
   },
+  {
+    id: 5,
+    number: '201',
+    floor: 2,
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+    inUse: true,
+    type: 'RESIDENTIAL',
+    capacity: 2,
+    standard: 'Podwyższony',
+    assignedSeniors: 1,
+  },
 ]
 
 export const activities = [
@@ -181,6 +256,16 @@ export const activities = [
     description: 'Pomiar i konsultacja',
     instructors: 1,
     participants: 8,
+  },
+  {
+    id: 3,
+    name: 'Spacer w ogrodzie',
+    type: 'RECREATIONAL',
+    price: 0,
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+    description: 'Codzienny spacer na świeżym powietrzu',
+    instructors: 1,
+    participants: 5,
   },
 ]
 
@@ -230,6 +315,14 @@ export const assignments = [
     to: 'Gimnastyka lekka',
     seniorHome: 'Dom Seniora „Złota Jesień”',
   },
+  {
+    id: 4,
+    type: 'SENIOR_ROOM',
+    label: 'Senior → pokój',
+    from: 'Zofia Nowicka',
+    to: 'Pokój 201',
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+  },
 ]
 
 export const roomOccupancyReport = [
@@ -253,6 +346,16 @@ export const roomOccupancyReport = [
     free: 1,
     standard: 'Podstawowy',
   },
+  {
+    id: 3,
+    roomNumber: '201',
+    floor: 2,
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+    capacity: 2,
+    assigned: 1,
+    free: 1,
+    standard: 'Podwyższony',
+  },
 ]
 
 export const seniorActivityReport = [
@@ -273,6 +376,15 @@ export const seniorActivityReport = [
     activityCount: 0,
     activityTypes: '—',
     guardians: '—',
+  },
+  {
+    id: 3,
+    senior: 'Zofia Nowicka',
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+    status: 'Aktywny',
+    activityCount: 1,
+    activityTypes: 'Rekreacyjne',
+    guardians: 'Tomasz Kamiński',
   },
 ]
 
@@ -299,6 +411,17 @@ export const employeeWorkloadReport = [
     activities: 1,
     status: 'Aktywny',
   },
+  {
+    id: 3,
+    employee: 'Tomasz Kamiński',
+    position: 'Opiekun',
+    seniorHome: 'Dom Seniora „Spokojna Przystań”',
+    isMedical: false,
+    wards: 1,
+    rooms: 1,
+    activities: 1,
+    status: 'Aktywny',
+  },
 ]
 
 export const dataQualityIssues = [
@@ -307,6 +430,7 @@ export const dataQualityIssues = [
     category: 'Seniorzy',
     issue: 'Aktywny senior bez opiekuna',
     entity: 'Jan Malinowski',
+    seniorHome: 'Dom Seniora „Złota Jesień”',
     severity: 'warning',
   },
   {
@@ -314,6 +438,7 @@ export const dataQualityIssues = [
     category: 'Seniorzy',
     issue: 'Aktywny senior bez pokoju',
     entity: 'Jan Malinowski',
+    seniorHome: 'Dom Seniora „Złota Jesień”',
     severity: 'warning',
   },
 ]

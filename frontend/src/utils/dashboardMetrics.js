@@ -53,7 +53,11 @@ export function computeSeniorsPerHome(seniorList, homes) {
   return homes.map((home) => ({
     homeId: home.id,
     homeName: home.name,
-    active: seniorList.filter((s) => !s.dischargeDate && s.seniorHome === home.name).length,
+    active: seniorList.filter((s) => {
+      if (s.dischargeDate) return false
+      if (s.seniorHomeId != null) return Number(s.seniorHomeId) === Number(home.id)
+      return s.seniorHome === home.name
+    }).length,
   }))
 }
 

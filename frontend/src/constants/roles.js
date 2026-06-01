@@ -17,6 +17,13 @@ export const ROLE_OPTIONS = [
 
 export const ROLE_LABELS = Object.fromEntries(ROLE_OPTIONS.map((r) => [r.value, r.label]))
 
+/** Role przypisane do jednego domu seniora (§7 PDF). */
+export const HOME_SCOPED_ROLES = [ROLES.MANAGER, ROLES.EMPLOYEE, ROLES.MEDICAL]
+
+export function isHomeScopedRole(role) {
+  return HOME_SCOPED_ROLES.includes(role)
+}
+
 /** Odczyt trasy (nazwa z routera). */
 export const ROUTE_READ_ACCESS = {
   dashboard: Object.values(ROLES),
