@@ -29,6 +29,25 @@ const http = axios.create({
   },
 })
 
+let authTokenProvider = () => null
+let unauthorizedHandler = null
+
+export function setAuthTokenProvider(provider) {
+  authTokenProvider = provider
+}
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = handler
+}
+
+http.interceptors.request.use((config) => {
+  const token = authTokenProvider?.()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 http.interceptors.response.use(
   (response) => {
     if (response.status === 204) return null
@@ -41,6 +60,9 @@ http.interceptors.response.use(
   (error) => {
     if (axios.isAxiosError(error) && error.response) {
       const { status, data: body } = error.response
+      if (status === 401) {
+        unauthorizedHandler?.()
+      }
       throw new ApiError(errorMessage(status, body), { status, body })
     }
     throw error
