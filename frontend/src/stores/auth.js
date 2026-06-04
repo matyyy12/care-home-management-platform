@@ -18,9 +18,8 @@ function loadStoredToken() {
     localStorage.removeItem(LEGACY_USER_STORAGE_KEY)
     return localStorage.getItem(TOKEN_STORAGE_KEY)
   } catch {
-    
+    return null
   }
-  return null
 }
 
 function persistToken(nextToken) {
