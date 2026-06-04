@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,7 +26,6 @@ import com.bd2.seniorhomeapp.seniorHome.repository.SeniorHomeRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@WithMockUser(roles = "MANAGER")
 class SeniorControllerTest {
 
 	@Autowired
@@ -70,6 +71,7 @@ class SeniorControllerTest {
 	@Test
 	void createAndListSeniors() throws Exception {
 		mockMvc.perform(post("/api/seniors")
+						.with(authenticatedUser())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("""
 								{
@@ -88,7 +90,7 @@ class SeniorControllerTest {
 				.andExpect(jsonPath("$.lastName").value("Kowalski"))
 				.andExpect(jsonPath("$.seniorHomeId").value(seniorHomeId.intValue()));
 
-		mockMvc.perform(get("/api/seniors"))
+		mockMvc.perform(get("/api/seniors").with(authenticatedUser()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[0].firstName").value("Jan"));
 	}
@@ -96,6 +98,7 @@ class SeniorControllerTest {
 	@Test
 	void rejectsMissingFirstName() throws Exception {
 		mockMvc.perform(post("/api/seniors")
+						.with(authenticatedUser())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("""
 								{
@@ -103,5 +106,9 @@ class SeniorControllerTest {
 								}
 								"""))
 				.andExpect(status().isBadRequest());
+	}
+
+	private RequestPostProcessor authenticatedUser() {
+		return jwt().authorities(new SimpleGrantedAuthority("ROLE_MANAGER"));
 	}
 }
