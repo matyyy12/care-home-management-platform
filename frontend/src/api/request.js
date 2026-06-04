@@ -29,19 +29,18 @@ const http = axios.create({
   },
 })
 
-let authTokenProvider = () => null
-let unauthorizedHandler = null
-
-export function setAuthTokenProvider(provider) {
-  authTokenProvider = provider
+const auth = {
+  getToken: () => null,
+  onUnauthorized: null,
 }
 
-export function setUnauthorizedHandler(handler) {
-  unauthorizedHandler = handler
+export function configureApiAuth({ getToken, onUnauthorized }) {
+  auth.getToken = getToken
+  auth.onUnauthorized = onUnauthorized
 }
 
 http.interceptors.request.use((config) => {
-  const token = authTokenProvider?.()
+  const token = auth.getToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -61,7 +60,7 @@ http.interceptors.response.use(
     if (axios.isAxiosError(error) && error.response) {
       const { status, data: body } = error.response
       if (status === 401) {
-        unauthorizedHandler?.()
+        auth.onUnauthorized?.()
       }
       throw new ApiError(errorMessage(status, body), { status, body })
     }

@@ -1,7 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { getCurrentUser, login as apiLogin } from '@/api/auth'
-import { setAuthTokenProvider, setUnauthorizedHandler } from '@/api/request'
 import {
   ROLE_LABELS,
   canRoleReadRoute,
@@ -35,9 +34,6 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(loadStoredToken())
   const user = ref(null)
   const isLoading = ref(false)
-
-  setAuthTokenProvider(() => token.value)
-  setUnauthorizedHandler(() => clearSession())
 
   const isAuthenticated = computed(() => Boolean(token.value))
   const email = computed(() => user.value?.email ?? '')
