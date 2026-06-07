@@ -5,6 +5,11 @@ import java.util.Date;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
+import com.bd2.seniorhomeapp.activity.entity.Activity;
+import com.bd2.seniorhomeapp.activity.entity.ActivityType;
+import com.bd2.seniorhomeapp.activity.repository.ActivityRepository;
 import com.bd2.seniorhomeapp.address.entity.Address;
 import com.bd2.seniorhomeapp.address.repository.AddressRepository;
 import com.bd2.seniorhomeapp.postOffice.entity.PostOffice;
@@ -21,6 +26,7 @@ public class DemoDataLoader implements CommandLineRunner {
 	private final SeniorHomeRepository seniorHomeRepository;
 	private final AddressRepository addressRepository;
 	private final PostOfficeRepository postOfficeRepository;
+	private final ActivityRepository activityRepository;
 
 	@Override
 	public void run(String... args) {
@@ -28,7 +34,7 @@ public class DemoDataLoader implements CommandLineRunner {
 			return;
 		}
 
-		seniorHomeRepository.save(createHome(
+		SeniorHome zlotaJesien = seniorHomeRepository.save(createHome(
 				"Złota Jesień",
 				"123456789",
 				"kontakt@zlota-jesien.pl",
@@ -44,6 +50,34 @@ public class DemoDataLoader implements CommandLineRunner {
 				"Warszawa",
 				"Leśna",
 				"5"));
+
+		activityRepository.save(createActivity(
+				"Gimnastyka lekka",
+				ActivityType.RECREATIONAL,
+				BigDecimal.ZERO,
+				zlotaJesien,
+				"Ćwiczenia poranne w sali gier"));
+		activityRepository.save(createActivity(
+				"Kontrola ciśnienia",
+				ActivityType.MEDICAL,
+				new BigDecimal("25.00"),
+				zlotaJesien,
+				"Pomiar i konsultacja"));
+	}
+
+	private Activity createActivity(
+			String name,
+			ActivityType type,
+			BigDecimal price,
+			SeniorHome seniorHome,
+			String description) {
+		Activity activity = new Activity();
+		activity.setName(name);
+		activity.setType(type);
+		activity.setPrice(price);
+		activity.setSeniorHome(seniorHome);
+		activity.setDescription(description);
+		return activity;
 	}
 
 	private SeniorHome createHome(

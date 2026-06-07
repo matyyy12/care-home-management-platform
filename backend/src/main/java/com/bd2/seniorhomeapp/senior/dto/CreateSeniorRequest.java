@@ -3,6 +3,7 @@ package com.bd2.seniorhomeapp.senior.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -16,4 +17,9 @@ public record CreateSeniorRequest(
 		@NotNull LocalDate accommodationDate,
 		LocalDate dischargeDate,
 		@NotNull Long seniorHomeId) {
+
+	@AssertTrue(message = "Discharge date cannot be before birth date or accommodation date")
+	public boolean isDischargeDateValid() {
+		return SeniorDateValidation.isDischargeDateValid(dischargeDate, birthDate, accommodationDate);
+	}
 }

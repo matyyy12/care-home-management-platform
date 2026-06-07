@@ -31,7 +31,9 @@ export function useSeniors() {
   const error = ref(null)
   const usingMock = ref(!apiEnabled)
 
-  const seniorList = computed(() => filterItems(allSeniors.value))
+  const seniorList = computed(() =>
+    filterItems(allSeniors.value, { homeIdKey: 'seniorHomeId' }),
+  )
   const seniorHomes = computed(() => {
     if (!isScoped.value) return allSeniorHomes.value
     return allSeniorHomes.value.filter((home) => Number(home.id) === Number(homeId.value))

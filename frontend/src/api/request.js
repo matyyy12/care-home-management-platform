@@ -73,6 +73,13 @@ export function apiPatch(path, data) {
   })
 }
 
+export function apiPut(path, data) {
+  return apiRequest(path, {
+    method: 'PUT',
+    data,
+  })
+}
+
 export function apiDelete(path) {
   return apiRequest(path, {
     method: 'DELETE',

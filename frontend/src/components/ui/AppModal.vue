@@ -16,8 +16,11 @@ defineEmits(['close'])
       aria-modal="true"
       :aria-label="title || 'Okno dialogowe'"
     >
-      <div class="absolute inset-0 bg-slate-900/50" @click="$emit('close')" />
-      <div class="relative z-10 w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+      <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" @click="$emit('close')" />
+      <div
+        class="relative z-10 w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+        @click.stop
+      >
         <div class="mb-4 flex items-start justify-between gap-4">
           <h2 v-if="title" class="text-lg font-semibold text-slate-900">{{ title }}</h2>
           <button
