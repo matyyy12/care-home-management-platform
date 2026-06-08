@@ -1,6 +1,7 @@
 package com.bd2.seniorhomeapp.config;
 
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,11 @@ import com.bd2.seniorhomeapp.address.entity.Address;
 import com.bd2.seniorhomeapp.address.repository.AddressRepository;
 import com.bd2.seniorhomeapp.postOffice.entity.PostOffice;
 import com.bd2.seniorhomeapp.postOffice.repository.PostOfficeRepository;
+import com.bd2.seniorhomeapp.room.entity.GameRoomEquipment;
+import com.bd2.seniorhomeapp.room.entity.GameRoomEquipmentType;
+import com.bd2.seniorhomeapp.room.entity.Room;
+import com.bd2.seniorhomeapp.room.entity.RoomType;
+import com.bd2.seniorhomeapp.room.repository.RoomRepository;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 import com.bd2.seniorhomeapp.seniorHome.repository.SeniorHomeRepository;
 
@@ -27,6 +33,7 @@ public class DemoDataLoader implements CommandLineRunner {
 	private final AddressRepository addressRepository;
 	private final PostOfficeRepository postOfficeRepository;
 	private final ActivityRepository activityRepository;
+	private final RoomRepository roomRepository;
 
 	@Override
 	public void run(String... args) {
@@ -42,7 +49,7 @@ public class DemoDataLoader implements CommandLineRunner {
 				"Warszawa",
 				"Polna",
 				"10"));
-		seniorHomeRepository.save(createHome(
+		SeniorHome spokojnaPrzystan = seniorHomeRepository.save(createHome(
 				"Spokojna Przystań",
 				"229876543",
 				"biuro@spokojna.pl",
@@ -63,6 +70,62 @@ public class DemoDataLoader implements CommandLineRunner {
 				new BigDecimal("25.00"),
 				zlotaJesien,
 				"Pomiar i konsultacja"));
+
+		roomRepository.save(createResidentialRoom("101", 1, zlotaJesien, 2, "Podstawowy"));
+		roomRepository.save(createResidentialRoom("102", 1, zlotaJesien, 2, "Podstawowy"));
+		roomRepository.save(createOfficeRoom("G1", 0, zlotaJesien, "Gabinet pielęgniarki", "Ciśnieniomierz Omron"));
+		roomRepository.save(createGameRoom("SG1", 0, zlotaJesien));
+		roomRepository.save(createResidentialRoom("201", 2, spokojnaPrzystan, 2, "Podwyższony"));
+	}
+
+	private Room createResidentialRoom(
+			String roomNumber,
+			int floor,
+			SeniorHome seniorHome,
+			int capacity,
+			String standard) {
+		Room room = new Room();
+		room.setRoomNumber(roomNumber);
+		room.setFloor(floor);
+		room.setInUse(true);
+		room.setSeniorHome(seniorHome);
+		room.setType(RoomType.RESIDENTIAL);
+		room.setCapacity(capacity);
+		room.setStandard(standard);
+		return room;
+	}
+
+	private Room createOfficeRoom(
+			String roomNumber,
+			int floor,
+			SeniorHome seniorHome,
+			String officeKind,
+			String equipmentDescription) {
+		Room room = new Room();
+		room.setRoomNumber(roomNumber);
+		room.setFloor(floor);
+		room.setInUse(true);
+		room.setSeniorHome(seniorHome);
+		room.setType(RoomType.OFFICE);
+		room.setOfficeKind(officeKind);
+		room.setEquipmentDescription(equipmentDescription);
+		return room;
+	}
+
+	private Room createGameRoom(String roomNumber, int floor, SeniorHome seniorHome) {
+		Room room = new Room();
+		room.setRoomNumber(roomNumber);
+		room.setFloor(floor);
+		room.setInUse(true);
+		room.setSeniorHome(seniorHome);
+		room.setType(RoomType.GAME_ROOM);
+		room.setGameEquipment(List.of(
+				new GameRoomEquipment(GameRoomEquipmentType.TV, 1),
+				new GameRoomEquipment(GameRoomEquipmentType.COMPUTER, 2),
+				new GameRoomEquipment(GameRoomEquipmentType.CROSSWORD, 15),
+				new GameRoomEquipment(GameRoomEquipmentType.BOARD_GAME, 8),
+				new GameRoomEquipment(GameRoomEquipmentType.RADIO, 1)));
+		return room;
 	}
 
 	private Activity createActivity(
