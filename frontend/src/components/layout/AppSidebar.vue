@@ -1,11 +1,11 @@
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { navigationGroups } from '@/constants/navigation'
 import { useAuthStore } from '@/stores/auth'
-import RoleSwitcher from './RoleSwitcher.vue'
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 
 const groups = computed(() =>
@@ -21,6 +21,11 @@ function isActive(path) {
   if (path === '/') return route.path === '/'
   return route.path === path || route.path.startsWith(`${path}/`)
 }
+
+async function logout() {
+  auth.logout()
+  await router.push({ name: 'login' })
+}
 </script>
 
 <template>
@@ -30,7 +35,24 @@ function isActive(path) {
       <h1 class="mt-1 text-lg font-semibold text-slate-900">Panel zarządzania</h1>
     </div>
 
-    <RoleSwitcher />
+    <div class="space-y-3 border-b border-slate-100 px-4 py-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Zalogowano jako</p>
+        <p class="mt-1 truncate text-sm font-medium text-slate-800">{{ auth.email }}</p>
+        <p class="mt-1 text-xs text-slate-500">{{ auth.roleLabel }}</p>
+      </div>
+      <p v-if="auth.isHomeScoped" class="text-xs text-slate-500">
+        Dom seniora:
+        <span class="font-medium text-slate-700">{{ auth.assignedHomeName || auth.assignedSeniorHomeId }}</span>
+      </p>
+      <button
+        type="button"
+        class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+        @click="logout"
+      >
+        Wyloguj
+      </button>
+    </div>
 
     <nav class="flex-1 overflow-y-auto px-3 py-4" aria-label="Główne menu">
       <div v-for="group in groups" :key="group.label" class="mb-6">
@@ -56,7 +78,7 @@ function isActive(path) {
     </nav>
 
     <div class="border-t border-slate-100 px-4 py-4 text-xs text-slate-500">
-      Dostęp wg roli aplikacyjnej (demo)
+      Dostep wg roli z konta uzytkownika
     </div>
   </aside>
 </template>

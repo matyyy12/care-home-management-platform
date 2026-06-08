@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import { getCurrentUser, login as apiLogin } from '@/api/auth'
 import {
-  ROLES,
   ROLE_LABELS,
   canRoleReadRoute,
   canRoleWriteRoute,
@@ -9,37 +9,37 @@ import {
 } from '@/constants/roles'
 import { seniorHomes as mockSeniorHomes } from '@/mock/data'
 
-const ROLE_STORAGE_KEY = 'seniorhouse-app-role'
-const HOME_STORAGE_KEY = 'seniorhouse-app-assigned-home-id'
+const TOKEN_STORAGE_KEY = 'seniorhouse-app-token'
+const LEGACY_USER_STORAGE_KEY = 'seniorhouse-app-user'
 
-function loadStoredRole() {
+function loadStoredToken() {
   try {
-    const stored = localStorage.getItem(ROLE_STORAGE_KEY)
-    if (stored && Object.values(ROLES).includes(stored)) return stored
+    localStorage.removeItem(LEGACY_USER_STORAGE_KEY)
+    return localStorage.getItem(TOKEN_STORAGE_KEY)
   } catch {
-    /* localStorage niedostępny */
+    return null
   }
-  return ROLES.MANAGER
 }
 
-function loadStoredHomeId() {
+function persistToken(nextToken) {
   try {
-    const stored = localStorage.getItem(HOME_STORAGE_KEY)
-    if (stored) {
-      const id = Number(stored)
-      if (mockSeniorHomes.some((home) => home.id === id)) return id
-    }
+    if (nextToken) localStorage.setItem(TOKEN_STORAGE_KEY, nextToken)
+    else localStorage.removeItem(TOKEN_STORAGE_KEY)
   } catch {
-    /* localStorage niedostępny */
+    /* ignore */
   }
-  return mockSeniorHomes[0]?.id ?? null
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  const role = ref(loadStoredRole())
-  const assignedSeniorHomeId = ref(loadStoredHomeId())
+  const token = ref(loadStoredToken())
+  const user = ref(null)
+  const isLoading = ref(false)
 
-  const roleLabel = computed(() => ROLE_LABELS[role.value] ?? role.value)
+  const isAuthenticated = computed(() => Boolean(token.value))
+  const email = computed(() => user.value?.email ?? '')
+  const role = computed(() => user.value?.role ?? null)
+  const assignedSeniorHomeId = computed(() => user.value?.assignedSeniorHomeId ?? null)
+  const roleLabel = computed(() => (role.value ? ROLE_LABELS[role.value] ?? role.value : ''))
 
   const isHomeScoped = computed(() => isHomeScopedRole(role.value))
 
@@ -53,42 +53,69 @@ export const useAuthStore = defineStore('auth', () => {
     mockSeniorHomes.map((home) => ({ value: home.id, label: home.name })),
   )
 
-  function setRole(newRole) {
-    role.value = newRole
+  function setSession(nextToken, nextUser) {
+    token.value = nextToken
+    user.value = nextUser
+    persistToken(nextToken)
+  }
+
+  function clearSession() {
+    setSession(null, null)
+  }
+
+  async function login(credentials) {
+    const response = await apiLogin(credentials)
+    setSession(response.token, response.user)
+    return response.user
+  }
+
+  async function loadCurrentUser() {
+    if (!token.value) return null
+
+    isLoading.value = true
     try {
-      localStorage.setItem(ROLE_STORAGE_KEY, newRole)
-    } catch {
-      /* ignore */
+      const currentUser = await getCurrentUser()
+      user.value = currentUser
+      return currentUser
+    } catch (error) {
+      clearSession()
+      throw error
+    } finally {
+      isLoading.value = false
     }
   }
 
-  function setAssignedSeniorHome(id) {
-    assignedSeniorHomeId.value = Number(id)
-    try {
-      localStorage.setItem(HOME_STORAGE_KEY, String(assignedSeniorHomeId.value))
-    } catch {
-      /* ignore */
-    }
+  function logout() {
+    clearSession()
   }
 
   function canRead(routeName) {
+    if (!role.value) return false
     return canRoleReadRoute(role.value, routeName)
   }
 
   function canWrite(routeName) {
+    if (!role.value) return false
     return canRoleWriteRoute(role.value, routeName)
   }
 
   return {
+    token,
+    user,
+    email,
     role,
     roleLabel,
     assignedSeniorHomeId,
     assignedHome,
     assignedHomeName,
     isHomeScoped,
+    isAuthenticated,
+    isLoading,
     seniorHomeOptions,
-    setRole,
-    setAssignedSeniorHome,
+    login,
+    loadCurrentUser,
+    logout,
+    clearSession,
     canRead,
     canWrite,
   }

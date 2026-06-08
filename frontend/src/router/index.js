@@ -6,6 +6,12 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/logowanie',
+      name: 'login',
+      component: () => import('@/views/auth/LoginView.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/',
       component: AppLayout,
       children: [
@@ -99,9 +105,25 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const auth = useAuthStore()
   const routeName = to.name
+
+  if (to.meta.public) {
+    return auth.isAuthenticated ? { name: 'dashboard' } : true
+  }
+
+  if (!auth.isAuthenticated) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (!auth.user) {
+    try {
+      await auth.loadCurrentUser()
+    } catch {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+  }
 
   if (!routeName || routeName === 'forbidden') return true
 

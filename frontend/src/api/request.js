@@ -29,6 +29,24 @@ const http = axios.create({
   },
 })
 
+const auth = {
+  getToken: () => null,
+  onUnauthorized: null,
+}
+
+export function configureApiAuth({ getToken, onUnauthorized }) {
+  auth.getToken = getToken
+  auth.onUnauthorized = onUnauthorized
+}
+
+http.interceptors.request.use((config) => {
+  const token = auth.getToken()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 http.interceptors.response.use(
   (response) => {
     if (response.status === 204) return null
@@ -41,6 +59,9 @@ http.interceptors.response.use(
   (error) => {
     if (axios.isAxiosError(error) && error.response) {
       const { status, data: body } = error.response
+      if (status === 401) {
+        auth.onUnauthorized?.()
+      }
       throw new ApiError(errorMessage(status, body), { status, body })
     }
     throw error
