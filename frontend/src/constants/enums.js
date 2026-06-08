@@ -10,6 +10,14 @@ export const ROOM_TYPES = [
   { value: 'GAME_ROOM', label: 'Sala gier' },
 ]
 
+export const GAME_ROOM_EQUIPMENT_TYPES = [
+  { value: 'TV', label: 'Telewizor' },
+  { value: 'RADIO', label: 'Radio' },
+  { value: 'COMPUTER', label: 'Komputer' },
+  { value: 'CROSSWORD', label: 'Krzyżówki' },
+  { value: 'BOARD_GAME', label: 'Gry planszowe' },
+]
+
 export const GENDER_OPTIONS = [
   { value: 'F', label: 'Kobieta' },
   { value: 'M', label: 'Mężczyzna' },
