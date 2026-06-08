@@ -21,6 +21,7 @@ export function mapEmployeeFromApi(dto, homeNames = new Map()) {
     specialization: dto.specialty ?? '',
     salary: dto.salary ?? 0,
     roomIds: dto.roomIds ?? [],
+    seniorIds: dto.seniorIds ?? [],
   }
 }
 

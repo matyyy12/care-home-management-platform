@@ -13,5 +13,9 @@ public interface EmployeeService {
     Employee updateEmployee(EmployeeUpdateRequest employeeUpdateRequest, Long id);
     Employee assignEmployeeToRoom(Long employeeId, Long roomId);
     List<Employee> assignEmployeesToRoom(Set<Long> employeeIds, Long roomId);
+    Employee unassignEmployeeFromRoom(Long employeeId, Long roomId);
+    Employee assignSeniorToEmployee(Long employeeId, Long seniorId);
+    Employee unassignSeniorFromEmployee(Long employeeId, Long seniorId);
+    Employee setEmployeeSeniors(Long employeeId, Set<Long> seniorIds);
     void deleteEmployee(Long id);
 }

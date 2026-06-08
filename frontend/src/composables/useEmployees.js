@@ -2,8 +2,12 @@ import { computed, onMounted, ref } from 'vue'
 import {
   assignEmployeeToRoom as assignEmployeeToRoomRequest,
   assignEmployeesToRoom as assignEmployeesToRoomRequest,
+  assignSeniorToEmployee as assignSeniorToEmployeeRequest,
   createEmployee,
   fetchEmployees,
+  setEmployeeSeniors as setEmployeeSeniorsRequest,
+  unassignEmployeeFromRoom as unassignEmployeeFromRoomRequest,
+  unassignSeniorFromEmployee as unassignSeniorFromEmployeeRequest,
 } from '@/api/employees'
 import { fetchPositions } from '@/api/positions'
 import { fetchSeniorHomes } from '@/api/seniorHomes'
@@ -120,6 +124,62 @@ export function useEmployees() {
     }
   }
 
+  async function unassignEmployeeFromRoom(employeeId, roomId) {
+    assigning.value = true
+    error.value = null
+    try {
+      await unassignEmployeeFromRoomRequest(employeeId, roomId)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć pracownika z pomieszczenia'
+      throw e
+    } finally {
+      assigning.value = false
+    }
+  }
+
+  async function setEmployeeSeniors(employeeId, seniorIds) {
+    assigning.value = true
+    error.value = null
+    try {
+      await setEmployeeSeniorsRequest(employeeId, seniorIds)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się zaktualizować przypisań opiekunów'
+      throw e
+    } finally {
+      assigning.value = false
+    }
+  }
+
+  async function assignSeniorToEmployee(employeeId, seniorId) {
+    assigning.value = true
+    error.value = null
+    try {
+      await assignSeniorToEmployeeRequest(employeeId, seniorId)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się przypisać seniora do opiekuna'
+      throw e
+    } finally {
+      assigning.value = false
+    }
+  }
+
+  async function unassignSeniorFromEmployee(employeeId, seniorId) {
+    assigning.value = true
+    error.value = null
+    try {
+      await unassignSeniorFromEmployeeRequest(employeeId, seniorId)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć przypisania opiekuna'
+      throw e
+    } finally {
+      assigning.value = false
+    }
+  }
+
   onMounted(reload)
 
   return {
@@ -134,5 +194,9 @@ export function useEmployees() {
     addEmployee,
     assignEmployeeToRoom,
     assignEmployeesToRoom,
+    unassignEmployeeFromRoom,
+    assignSeniorToEmployee,
+    unassignSeniorFromEmployee,
+    setEmployeeSeniors,
   }
 }

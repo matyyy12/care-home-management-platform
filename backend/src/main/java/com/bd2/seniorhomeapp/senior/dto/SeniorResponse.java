@@ -19,9 +19,15 @@ public record SeniorResponse(
 		Long seniorHomeId,
 		SeniorStatus status,
 		Long roomId,
-		String roomNumber) {
+		String roomNumber,
+		List<Long> guardianIds,
+		List<String> guardianNames) {
 
 	public static SeniorResponse from(Senior senior) {
+		return from(senior, List.of(), List.of());
+	}
+
+	public static SeniorResponse from(Senior senior, List<Long> guardianIds, List<String> guardianNames) {
 		return new SeniorResponse(
 				senior.getSeniorId(),
 				senior.getFirstName(),
@@ -35,6 +41,8 @@ public record SeniorResponse(
 				senior.getSeniorHome() != null ? senior.getSeniorHome().getId() : null,
 				senior.getStatus(),
 				senior.getRoom() != null ? senior.getRoom().getId() : null,
-				senior.getRoom() != null ? senior.getRoom().getRoomNumber() : null);
+				senior.getRoom() != null ? senior.getRoom().getRoomNumber() : null,
+				guardianIds,
+				guardianNames);
 	}
 }

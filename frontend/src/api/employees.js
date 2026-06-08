@@ -20,6 +20,24 @@ export async function assignEmployeesToRoom(employeeIds, roomId) {
   return apiPatch(`/api/employees/rooms/${roomId}`, { employeeIds })
 }
 
+export async function unassignEmployeeFromRoom(employeeId, roomId) {
+  return apiDelete(`/api/employees/${employeeId}/rooms/${roomId}`)
+}
+
+export async function assignSeniorToEmployee(employeeId, seniorId) {
+  return apiPatch(`/api/employees/${employeeId}/seniors/${seniorId}`)
+}
+
+export async function unassignSeniorFromEmployee(employeeId, seniorId) {
+  return apiDelete(`/api/employees/${employeeId}/seniors/${seniorId}`)
+}
+
+export async function setEmployeeSeniors(employeeId, seniorIds) {
+  return apiPatch(`/api/employees/${employeeId}/seniors`, {
+    seniorIds: seniorIds.map((id) => Number(id)),
+  })
+}
+
 export async function deleteEmployee(id) {
   return apiDelete(`/api/employees/${id}`)
 }

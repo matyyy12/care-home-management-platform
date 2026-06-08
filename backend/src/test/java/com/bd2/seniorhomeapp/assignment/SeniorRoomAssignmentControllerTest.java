@@ -83,7 +83,6 @@ class SeniorRoomAssignmentControllerTest {
     private static SeniorRoomAssignmentResponse sampleAssignment() {
         return new SeniorRoomAssignmentResponse(
                 1L,
-                1L,
                 "Helena Kowalczyk",
                 1L,
                 "101",

@@ -14,4 +14,6 @@ public interface SeniorRepository extends JpaRepository<Senior, Long> {
 	List<Senior> findByRoomIsNotNull();
 
 	List<Senior> findBySeniorHome_IdAndRoomIsNotNull(Long seniorHomeId);
+
+	List<Senior> findByRoom_Id(Long roomId);
 }
