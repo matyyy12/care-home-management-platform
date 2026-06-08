@@ -15,6 +15,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { emptyRoomForm, useRooms } from '@/composables/useRooms'
+import { useEmployees } from '@/composables/useEmployees'
 import { sourceNotice } from '@/composables/apiMode'
 import { GAME_ROOM_EQUIPMENT_TYPES, ROOM_TYPES } from '@/constants/enums'
 
@@ -35,6 +36,12 @@ const {
   removeRoom,
   seniorHomeIdForRow,
 } = useRooms()
+const {
+  employeeList: employees,
+  assigning: assigningEmployee,
+  error: employeeError,
+  assignEmployeesToRoom,
+} = useEmployees()
 
 const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 const homeOptions = computed(() => scopedHomeSelectOptions(seniorHomes.value))
@@ -73,6 +80,8 @@ const columns = [
 
 const form = ref(emptyRoomForm())
 const editForm = ref(emptyRoomForm())
+const employeeAssignmentForm = ref({ employeeIds: [] })
+const roomAssignmentForm = ref({ roomId: '', employeeIds: [] })
 const formNotice = ref('')
 const manageRow = ref(null)
 const manageStep = ref('menu')
@@ -85,8 +94,36 @@ const modalTitle = computed(() => {
   if (!manageRow.value) return ''
   if (manageStep.value === 'edit') return `Edytuj: ${manageRow.value.number}`
   if (manageStep.value === 'delete') return 'Usuń pomieszczenie'
+  if (manageStep.value === 'assignEmployee') return `Dodaj pracownika: ${manageRow.value.number}`
   return manageRow.value.number
 })
+
+const roomOptions = computed(() =>
+  roomList.value.map((room) => ({
+    value: room.id,
+    label: `${room.number} — ${room.seniorHome}`,
+  })),
+)
+
+const selectedAssignmentRoom = computed(() =>
+  roomList.value.find((room) => String(room.id) === String(roomAssignmentForm.value.roomId)) ?? null,
+)
+
+const assignmentEmployeeOptions = computed(() => employeeOptionsForRoom(selectedAssignmentRoom.value))
+
+const employeeOptions = computed(() => employeeOptionsForRoom(manageRow.value))
+
+function employeeOptionsForRoom(room) {
+  const roomHomeId = room ? seniorHomeIdForRow(room) : null
+
+  return employees.value
+    .filter((employee) => !roomHomeId || String(employee.seniorHomeId) === String(roomHomeId))
+    .filter((employee) => !employee.roomIds?.some((roomId) => String(roomId) === String(room?.id)))
+    .map((employee) => ({
+      value: employee.id,
+      label: `${employee.firstName} ${employee.lastName} — ${employee.position}`,
+    }))
+}
 
 const inUseOptions = [
   { value: 'true', label: 'Tak' },
@@ -94,7 +131,10 @@ const inUseOptions = [
 ]
 
 watch(manageOpen, (open) => {
-  if (!open) manageStep.value = 'menu'
+  if (!open) {
+    manageStep.value = 'menu'
+    employeeAssignmentForm.value = { employeeIds: [] }
+  }
 })
 
 watch(
@@ -212,6 +252,43 @@ function showDeleteConfirm() {
   manageStep.value = 'delete'
 }
 
+function showAssignEmployeeForm() {
+  employeeAssignmentForm.value = { employeeIds: [] }
+  manageStep.value = 'assignEmployee'
+}
+
+async function handleRoomAssignmentSubmit() {
+  if (!roomAssignmentForm.value.roomId || roomAssignmentForm.value.employeeIds.length === 0) return
+
+  try {
+    const result = await assignEmployeesToRoom(
+      roomAssignmentForm.value.employeeIds,
+      roomAssignmentForm.value.roomId,
+    )
+    formNotice.value = result.savedLocally
+      ? 'Przypisanie pracowników zapisane lokalnie (tryb demo).'
+      : 'Pracownicy przypisani do pomieszczenia.'
+    roomAssignmentForm.value = { roomId: '', employeeIds: [] }
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleAssignEmployee() {
+  const row = manageRow.value
+  if (!row || employeeAssignmentForm.value.employeeIds.length === 0) return
+
+  try {
+    const result = await assignEmployeesToRoom(employeeAssignmentForm.value.employeeIds, row.id)
+    formNotice.value = result.savedLocally
+      ? 'Przypisanie pracowników zapisane lokalnie (tryb demo).'
+      : 'Pracownicy przypisani do pomieszczenia.'
+    closeManage()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
 async function confirmDelete() {
   const row = manageRow.value
   if (!row) return
@@ -240,6 +317,7 @@ function rowBusy(row) {
 
     <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
+    <AlertMessage v-if="employeeError" variant="error">{{ employeeError }}</AlertMessage>
     <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
 
     <ReadOnlyNotice v-if="!canWrite">
@@ -326,6 +404,61 @@ function rowBusy(row) {
       </form>
     </AppCard>
 
+    <AppCard v-if="canWrite" title="Przypisz pracowników do pomieszczenia">
+      <form class="space-y-4" @submit.prevent="handleRoomAssignmentSubmit">
+        <FormField label="Pomieszczenie" required>
+          <AppSelect
+            v-model="roomAssignmentForm.roomId"
+            :options="roomOptions"
+            :disabled="assigningEmployee || roomOptions.length === 0"
+            required
+            @change="roomAssignmentForm.employeeIds = []"
+          />
+        </FormField>
+
+        <div class="space-y-2">
+          <p class="text-sm font-medium text-slate-700">Pracownicy</p>
+          <div
+            v-if="assignmentEmployeeOptions.length > 0"
+            class="max-h-64 space-y-2 overflow-auto rounded-lg border border-slate-200 p-3"
+          >
+            <label
+              v-for="employee in assignmentEmployeeOptions"
+              :key="employee.value"
+              class="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <input
+                v-model="roomAssignmentForm.employeeIds"
+                type="checkbox"
+                :value="employee.value"
+                :disabled="assigningEmployee"
+                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span>{{ employee.label }}</span>
+            </label>
+          </div>
+          <p v-else class="text-sm text-slate-500">
+            {{
+              roomAssignmentForm.roomId
+                ? 'Brak pracowników z tego domu seniora do przypisania.'
+                : 'Najpierw wybierz pomieszczenie.'
+            }}
+          </p>
+        </div>
+
+        <AppButton
+          type="submit"
+          :disabled="
+            assigningEmployee ||
+            !roomAssignmentForm.roomId ||
+            roomAssignmentForm.employeeIds.length === 0
+          "
+        >
+          {{ assigningEmployee ? 'Przypisywanie…' : 'Przypisz pracowników' }}
+        </AppButton>
+      </form>
+    </AppCard>
+
     <AppModal :open="detailOpen" :title="detailRow?.number ?? ''" @close="closeDetail">
       <dl v-if="detailRow" class="space-y-3 text-sm">
         <div>
@@ -373,6 +506,9 @@ function rowBusy(row) {
           <AppButton class="flex-1 justify-center" variant="secondary" @click="showEditForm">
             Zmień
           </AppButton>
+          <AppButton class="flex-1 justify-center" variant="secondary" @click="showAssignEmployeeForm">
+            Dodaj pracownika
+          </AppButton>
           <AppButton class="flex-1 justify-center" variant="danger" @click="showDeleteConfirm">
             Usuń
           </AppButton>
@@ -408,6 +544,52 @@ function rowBusy(row) {
           </AppButton>
         </div>
       </div>
+
+      <form v-else-if="manageStep === 'assignEmployee'" class="space-y-4" @submit.prevent="handleAssignEmployee">
+        <div class="space-y-2">
+          <p class="text-sm font-medium text-slate-700">Pracownicy</p>
+          <div
+            v-if="employeeOptions.length > 0"
+            class="max-h-64 space-y-2 overflow-auto rounded-lg border border-slate-200 p-3"
+          >
+            <label
+              v-for="employee in employeeOptions"
+              :key="employee.value"
+              class="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <input
+                v-model="employeeAssignmentForm.employeeIds"
+                type="checkbox"
+                :value="employee.value"
+                :disabled="assigningEmployee"
+                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span>{{ employee.label }}</span>
+            </label>
+          </div>
+        </div>
+        <p v-if="employeeOptions.length === 0" class="text-sm text-slate-500">
+          Brak pracowników z tego domu seniora do przypisania.
+        </p>
+        <div class="flex gap-2">
+          <AppButton
+            type="submit"
+            class="flex-1 justify-center"
+            :disabled="assigningEmployee || employeeAssignmentForm.employeeIds.length === 0"
+          >
+            {{ assigningEmployee ? 'Przypisywanie…' : 'Dodaj' }}
+          </AppButton>
+          <AppButton
+            type="button"
+            class="flex-1 justify-center"
+            variant="secondary"
+            :disabled="assigningEmployee"
+            @click="manageStep = 'menu'"
+          >
+            Wróć
+          </AppButton>
+        </div>
+      </form>
 
       <form v-else class="space-y-4" @submit.prevent="handleEditSubmit">
         <FormField label="Numer" required>
