@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bd2.seniorhomeapp.room.entity.Room;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 
 import jakarta.persistence.CollectionTable;
@@ -79,6 +80,10 @@ public class Senior {
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "senior_home_id", nullable = false)
 	private SeniorHome seniorHome;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "room_id")
+	private Room room;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)

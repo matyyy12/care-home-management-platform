@@ -35,7 +35,8 @@ export function mapSeniorFromApi(dto, homeNameById = new Map()) {
     accommodationDate: dto.accommodationDate,
     dischargeDate: dto.dischargeDate,
     status: dto.status,
-    roomNumber: '—',
+    roomNumber: dto.roomNumber ?? '—',
+    roomId: dto.roomId ?? null,
     guardians: '—',
     diseases: Array.isArray(dto.diseases) ? dto.diseases.join(', ') : '',
   }

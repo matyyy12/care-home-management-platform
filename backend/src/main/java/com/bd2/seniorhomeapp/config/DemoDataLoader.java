@@ -1,5 +1,6 @@
 package com.bd2.seniorhomeapp.config;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +21,8 @@ import com.bd2.seniorhomeapp.room.entity.GameRoomEquipmentType;
 import com.bd2.seniorhomeapp.room.entity.Room;
 import com.bd2.seniorhomeapp.room.entity.RoomType;
 import com.bd2.seniorhomeapp.room.repository.RoomRepository;
+import com.bd2.seniorhomeapp.senior.entity.Senior;
+import com.bd2.seniorhomeapp.senior.repository.SeniorRepository;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 import com.bd2.seniorhomeapp.seniorHome.repository.SeniorHomeRepository;
 
@@ -34,6 +37,7 @@ public class DemoDataLoader implements CommandLineRunner {
 	private final PostOfficeRepository postOfficeRepository;
 	private final ActivityRepository activityRepository;
 	private final RoomRepository roomRepository;
+	private final SeniorRepository seniorRepository;
 
 	@Override
 	public void run(String... args) {
@@ -71,11 +75,54 @@ public class DemoDataLoader implements CommandLineRunner {
 				zlotaJesien,
 				"Pomiar i konsultacja"));
 
-		roomRepository.save(createResidentialRoom("101", 1, zlotaJesien, 2, "Podstawowy"));
-		roomRepository.save(createResidentialRoom("102", 1, zlotaJesien, 2, "Podstawowy"));
+		Room room101 = roomRepository.save(createResidentialRoom("101", 1, zlotaJesien, 2, "Podstawowy"));
+		Room room102 = roomRepository.save(createResidentialRoom("102", 1, zlotaJesien, 2, "Podstawowy"));
 		roomRepository.save(createOfficeRoom("G1", 0, zlotaJesien, "Gabinet pielęgniarki", "Ciśnieniomierz Omron"));
 		roomRepository.save(createGameRoom("SG1", 0, zlotaJesien));
-		roomRepository.save(createResidentialRoom("201", 2, spokojnaPrzystan, 2, "Podwyższony"));
+		Room room201 = roomRepository.save(createResidentialRoom("201", 2, spokojnaPrzystan, 2, "Podwyższony"));
+
+		seniorRepository.save(createSenior(
+				"Helena",
+				"Kowalczyk",
+				"29010112345",
+				"F",
+				zlotaJesien,
+				room101));
+		seniorRepository.save(createSenior(
+				"Stanisław",
+				"Wójcik",
+				"41050567890",
+				"M",
+				zlotaJesien,
+				room102));
+		seniorRepository.save(createSenior(
+				"Zofia",
+				"Nowicka",
+				"35030311111",
+				"F",
+				spokojnaPrzystan,
+				room201));
+	}
+
+	private Senior createSenior(
+			String firstName,
+			String lastName,
+			String pesel,
+			String gender,
+			SeniorHome seniorHome,
+			Room room) {
+		Senior senior = new Senior(
+				firstName,
+				lastName,
+				LocalDate.of(1940, 1, 1),
+				pesel,
+				List.of("Artretyzm"),
+				gender,
+				LocalDate.of(2023, 1, 1),
+				null,
+				seniorHome);
+		senior.setRoom(room);
+		return senior;
 	}
 
 	private Room createResidentialRoom(

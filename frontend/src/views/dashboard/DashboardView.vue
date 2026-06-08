@@ -8,8 +8,8 @@ import {
   employees,
   seniorHomes,
   dataQualityIssues,
-  roomOccupancyReport,
 } from '@/mock/data'
+import { useRoomOccupancyReport } from '@/composables/useRoomOccupancyReport'
 import { ROLES } from '@/constants/roles'
 import {
   DASHBOARD_SECTION_LABELS,
@@ -32,6 +32,7 @@ import {
 
 const auth = useAuthStore()
 const { filterItems, isScoped, homeName } = useHomeScope()
+const { rows: roomOccupancyRows } = useRoomOccupancyReport()
 
 const scopedSeniors = computed(() => filterItems(seniors))
 const scopedEmployees = computed(() => filterItems(employees))
@@ -39,7 +40,9 @@ const scopedSeniorHomes = computed(() => {
   if (!isScoped.value) return seniorHomes
   return seniorHomes.filter((home) => home.name === homeName.value)
 })
-const scopedRoomOccupancyReport = computed(() => filterItems(roomOccupancyReport))
+const scopedRoomOccupancyReport = computed(() =>
+  filterItems(roomOccupancyRows.value, { homeIdKey: 'seniorHomeId' }),
+)
 const scopedQualityIssues = computed(() => filterItems(dataQualityIssues))
 
 const pageTitle = computed(() => dashboardTitle(auth.role, auth.roleLabel))

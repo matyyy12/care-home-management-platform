@@ -21,6 +21,8 @@ import com.bd2.seniorhomeapp.room.dto.response.RoomResponse;
 import com.bd2.seniorhomeapp.room.entity.GameRoomEquipment;
 import com.bd2.seniorhomeapp.room.entity.Room;
 import com.bd2.seniorhomeapp.room.service.RoomService;
+import com.bd2.seniorhomeapp.senior.entity.SeniorStatus;
+import com.bd2.seniorhomeapp.senior.repository.SeniorRepository;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class RoomController {
 
     private final RoomService roomService;
+    private final SeniorRepository seniorRepository;
 
     @GetMapping
     public ResponseEntity<?> getRooms(
@@ -72,11 +75,15 @@ public class RoomController {
                 room.getType(),
                 room.getCapacity(),
                 room.getStandard(),
-                0,
+                countAssignedSeniors(room.getId()),
                 room.getOfficeKind(),
                 room.getEquipmentDescription(),
                 mapGameEquipment(room.getGameEquipment())
         );
+    }
+
+    private int countAssignedSeniors(Long roomId) {
+        return (int) seniorRepository.countByRoom_IdAndStatus(roomId, SeniorStatus.ACTIVE);
     }
 
     private List<GameRoomEquipmentItem> mapGameEquipment(List<GameRoomEquipment> gameEquipment) {

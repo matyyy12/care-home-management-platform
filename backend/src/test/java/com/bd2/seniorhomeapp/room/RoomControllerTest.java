@@ -18,6 +18,8 @@ import com.bd2.seniorhomeapp.room.entity.GameRoomEquipmentType;
 import com.bd2.seniorhomeapp.room.entity.Room;
 import com.bd2.seniorhomeapp.room.entity.RoomType;
 import com.bd2.seniorhomeapp.room.service.RoomService;
+import com.bd2.seniorhomeapp.senior.entity.SeniorStatus;
+import com.bd2.seniorhomeapp.senior.repository.SeniorRepository;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -37,17 +39,21 @@ class RoomControllerTest {
     @Mock
     private RoomService roomService;
 
+    @Mock
+    private SeniorRepository seniorRepository;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new RoomController(roomService)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new RoomController(roomService, seniorRepository)).build();
     }
 
     @Test
     void getRoomsBySeniorHomeShouldReturnRoomResponses() throws Exception {
         Room room = sampleResidentialRoom(1L);
         when(roomService.findRooms(null, 1L)).thenReturn(List.of(room));
+        when(seniorRepository.countByRoom_IdAndStatus(1L, SeniorStatus.ACTIVE)).thenReturn(1L);
 
         mockMvc.perform(get("/api/rooms").param("seniorHomeId", "1"))
                 .andExpect(status().isOk())
@@ -63,6 +69,7 @@ class RoomControllerTest {
     void createRoomShouldReturnCreatedRoomResponse() throws Exception {
         Room room = sampleResidentialRoom(1L);
         when(roomService.createRoom(any(RoomRequest.class))).thenReturn(room);
+        when(seniorRepository.countByRoom_IdAndStatus(1L, SeniorStatus.ACTIVE)).thenReturn(0L);
 
         mockMvc.perform(post("/api/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -90,6 +97,7 @@ class RoomControllerTest {
         Room room = sampleResidentialRoom(1L);
         room.setStandard("Podwyższony");
         when(roomService.updateRoom(eq(1L), any())).thenReturn(room);
+        when(seniorRepository.countByRoom_IdAndStatus(1L, SeniorStatus.ACTIVE)).thenReturn(0L);
 
         mockMvc.perform(patch("/api/rooms/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,6 +116,7 @@ class RoomControllerTest {
     void createGameRoomShouldReturnGameEquipmentList() throws Exception {
         Room room = sampleGameRoom(2L);
         when(roomService.createRoom(any(RoomRequest.class))).thenReturn(room);
+        when(seniorRepository.countByRoom_IdAndStatus(2L, SeniorStatus.ACTIVE)).thenReturn(0L);
 
         mockMvc.perform(post("/api/rooms")
                         .contentType(MediaType.APPLICATION_JSON)

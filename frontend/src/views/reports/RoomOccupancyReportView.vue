@@ -7,31 +7,35 @@ import FormField from '@/components/ui/FormField.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AlertMessage from '@/components/ui/AlertMessage.vue'
 import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
-import { roomOccupancyReport, seniorHomes } from '@/mock/data'
+import { useRoomOccupancyReport } from '@/composables/useRoomOccupancyReport'
+import { useRooms } from '@/composables/useRooms'
+import { sourceNotice } from '@/composables/apiMode'
 
 const auth = useAuthStore()
-const { filterItems, scopedHomeSelectOptions, homeName } = useHomeScope()
+const { filterItems, scopedHomeSelectOptions } = useHomeScope()
+const { rows, loading, error, usingMock, reload } = useRoomOccupancyReport()
+const { seniorHomes } = useRooms()
 
-const scopedReport = computed(() => filterItems(roomOccupancyReport))
+const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const floorFilter = ref('')
 const standardFilter = ref('')
-const homeFilter = ref('')
+const homeFilterId = ref('')
 
-const homeOptions = computed(() => {
-  const scoped = scopedHomeSelectOptions(seniorHomes)
-  if (auth.isHomeScoped) {
-    return scoped
-  }
-  return [{ value: '', label: 'Wszystkie domy' }, ...scoped.map((h) => ({ value: h.label, label: h.label }))]
-})
+const homeOptions = computed(() => [
+  { value: '', label: 'Wszystkie domy' },
+  ...scopedHomeSelectOptions(seniorHomes.value),
+])
 
 watch(
-  () => [auth.isHomeScoped, homeName.value],
+  () => [auth.isHomeScoped, auth.assignedSeniorHomeId],
   () => {
-    homeFilter.value = auth.isHomeScoped ? homeName.value : ''
+    if (auth.isHomeScoped) {
+      homeFilterId.value = auth.assignedSeniorHomeId
+    }
     applyFilters()
   },
   { immediate: true },
@@ -47,15 +51,14 @@ const columns = [
   { key: 'standard', label: 'Standard' },
 ]
 
-const filteredRows = ref([])
+const filteredRows = computed(() => filterItems(rows.value, { homeIdKey: 'seniorHomeId' }))
 
 function applyFilters() {
-  filteredRows.value = scopedReport.value.filter((row) => {
-    if (homeFilter.value && row.seniorHome !== homeFilter.value) return false
-    if (floorFilter.value && String(row.floor) !== floorFilter.value) return false
-    if (standardFilter.value && row.standard !== standardFilter.value) return false
-    return true
-  })
+  const filters = {}
+  if (homeFilterId.value) filters.seniorHomeId = homeFilterId.value
+  if (floorFilter.value !== '') filters.floor = Number(floorFilter.value)
+  if (standardFilter.value.trim()) filters.standard = standardFilter.value.trim()
+  reload(filters)
 }
 </script>
 
@@ -66,14 +69,16 @@ function applyFilters() {
       description="Dostępność miejsc w pokojach mieszkalnych z filtrowaniem po domu, piętrze i standardzie."
     />
 
+    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
+    <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
+
     <AppCard title="Filtry">
       <form class="grid gap-4 sm:grid-cols-3" @submit.prevent="applyFilters">
         <FormField label="Dom seniora">
           <AppSelect
-            v-model="homeFilter"
+            v-model="homeFilterId"
             :options="homeOptions"
             :disabled="auth.isHomeScoped"
-            placeholder=""
           />
         </FormField>
         <FormField label="Piętro">
@@ -83,7 +88,9 @@ function applyFilters() {
           <AppInput v-model="standardFilter" placeholder="np. Podstawowy" />
         </FormField>
         <div class="sm:col-span-3">
-          <AppButton type="submit">Zastosuj filtry</AppButton>
+          <AppButton type="submit" :disabled="loading">
+            {{ loading ? 'Ładowanie…' : 'Zastosuj filtry' }}
+          </AppButton>
         </div>
       </form>
     </AppCard>
