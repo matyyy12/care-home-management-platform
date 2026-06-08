@@ -19,7 +19,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             "manager",
             "medicalEmployee",
             "seniors",
-            "activities"
+            "activities",
+            "rooms"
     })
     List<Employee> findAll();
 
@@ -32,7 +33,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             "manager",
             "medicalEmployee",
             "seniors",
-            "activities"
+            "activities",
+            "rooms"
     })
     Optional<Employee> findById(Long id);
 }

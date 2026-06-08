@@ -10,6 +10,8 @@ import com.bd2.seniorhomeapp.employee.entity.MedicalEmployee;
 import com.bd2.seniorhomeapp.employee.repository.EmployeeRepository;
 import com.bd2.seniorhomeapp.position.entity.Position;
 import com.bd2.seniorhomeapp.position.repository.PositionRepository;
+import com.bd2.seniorhomeapp.room.entity.Room;
+import com.bd2.seniorhomeapp.room.repository.RoomRepository;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 import com.bd2.seniorhomeapp.seniorHome.repository.SeniorHomeRepository;
 import jakarta.transaction.Transactional;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -26,6 +29,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final AddressService addressService;
     private final SeniorHomeRepository seniorHomeRepository;
     private final PositionRepository positionRepository;
+    private final RoomRepository roomRepository;
 
     @Override
     public List<Employee> getEmployees(Long id) {
@@ -123,6 +127,35 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.deleteById(id);
     }
 
+    @Override
+    public Employee assignEmployeeToRoom(Long employeeId, Long roomId) {
+        Employee employee = findEmployeeById(employeeId);
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        validateEmployeeAndRoom(employee, room);
+
+        employee.getRooms().add(room);
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public List<Employee> assignEmployeesToRoom(Set<Long> employeeIds, Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        List<Employee> employees = employeeIds.stream()
+                .map(this::findEmployeeById)
+                .toList();
+
+        employees.forEach(employee -> {
+            validateEmployeeAndRoom(employee, room);
+            employee.getRooms().add(room);
+        });
+
+        return employeeRepository.saveAll(employees);
+    }
+
     private Employee findEmployeeById(Long id) {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
@@ -136,6 +169,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     private Position findPositionById(Long id) {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Position not found"));
+    }
+
+    private void validateEmployeeAndRoom(Employee employee, Room room) {
+        if (!employee.getSeniorHome().getId().equals(room.getSeniorHome().getId())) {
+            throw new RuntimeException("Employee and room must belong to the same senior home");
+        }
     }
 
     private void setMedicalEmployee(Employee employee, MedicalEmployeeRequest medicalEmployeeRequest) {
@@ -154,7 +193,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private void validateDates(Employee employee) {
-        if (!employee.isValid()) {
+        if (employee.getFireDate() != null
+                && employee.getHireDate() != null
+                && employee.getFireDate().before(employee.getHireDate())) {
             throw new RuntimeException("Fire date cannot be before hire date");
         }
     }

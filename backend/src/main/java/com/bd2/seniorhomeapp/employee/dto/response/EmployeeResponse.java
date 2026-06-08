@@ -25,6 +25,7 @@ public record EmployeeResponse(
         Long managerId,
         Set<Long> seniorIds,
         Set<Long> activityIds,
+        Set<Long> roomIds,
         String licenseNumber,
         String specialty
 ) {

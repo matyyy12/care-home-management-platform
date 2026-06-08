@@ -4,6 +4,7 @@ package com.bd2.seniorhomeapp.employee.entity;
 import com.bd2.seniorhomeapp.activity.entity.Activity;
 import com.bd2.seniorhomeapp.address.entity.Address;
 import com.bd2.seniorhomeapp.position.entity.Position;
+import com.bd2.seniorhomeapp.room.entity.Room;
 import com.bd2.seniorhomeapp.senior.entity.Senior;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 import jakarta.persistence.*;
@@ -72,9 +73,13 @@ public class Employee {
     @ManyToMany
     private Set<Activity> activities = new HashSet<>();
 
-    // TODO: Odkomentowac po dolaczeniu brancha z encja Room.
-    // @ManyToMany
-    // private Set<Room> rooms = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+            name = "employee_room",
+            joinColumns = @JoinColumn(name = "employee_id"),
+            inverseJoinColumns = @JoinColumn(name = "room_id")
+    )
+    private Set<Room> rooms = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "home_id", nullable = false)

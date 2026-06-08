@@ -47,9 +47,6 @@ public record EmployeeRequest(
 
         Long managerId,
 
-        // TODO: Dodac po dolaczeniu brancha z encja Room.
-        // Set<Long> roomIds,
-
         @Valid
         MedicalEmployeeRequest medicalEmployee
 ) {

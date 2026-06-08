@@ -1,6 +1,7 @@
 package com.bd2.seniorhomeapp.employee.controller;
 
 import com.bd2.seniorhomeapp.employee.dto.request.EmployeeRequest;
+import com.bd2.seniorhomeapp.employee.dto.request.EmployeeRoomAssignmentRequest;
 import com.bd2.seniorhomeapp.employee.dto.request.EmployeeUpdateRequest;
 import com.bd2.seniorhomeapp.employee.dto.response.EmployeeResponse;
 import com.bd2.seniorhomeapp.employee.entity.Employee;
@@ -41,6 +42,21 @@ public class EmployeeController {
         return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(employee));
     }
 
+    @PatchMapping("/{employeeId}/rooms/{roomId}")
+    public ResponseEntity<?> assignEmployeeToRoom(@PathVariable Long employeeId,
+                                                  @PathVariable Long roomId) {
+        Employee employee = employeeService.assignEmployeeToRoom(employeeId, roomId);
+        return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(employee));
+    }
+
+    @PatchMapping("/rooms/{roomId}")
+    public ResponseEntity<?> assignEmployeesToRoom(@Valid @RequestBody EmployeeRoomAssignmentRequest request,
+                                                   @PathVariable Long roomId) {
+        List<EmployeeResponse> response = employeeService.assignEmployeesToRoom(request.employeeIds(), roomId)
+                .stream().map(this::mapToResponse).toList();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
@@ -71,6 +87,7 @@ public class EmployeeController {
                 employee.getManager() != null ? employee.getManager().getId() : null,
                 employee.getSeniors().stream().map(senior -> senior.getSeniorId()).collect(Collectors.toSet()),
                 employee.getActivities().stream().map(activity -> activity.getId()).collect(Collectors.toSet()),
+                employee.getRooms().stream().map(room -> room.getId()).collect(Collectors.toSet()),
                 medicalEmployee != null ? medicalEmployee.getLicenseNumber() : null,
                 medicalEmployee != null ? medicalEmployee.getSpecialty() : null
         );
