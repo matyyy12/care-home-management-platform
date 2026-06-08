@@ -12,6 +12,9 @@ import com.bd2.seniorhomeapp.position.entity.Position;
 import com.bd2.seniorhomeapp.position.repository.PositionRepository;
 import com.bd2.seniorhomeapp.room.entity.Room;
 import com.bd2.seniorhomeapp.room.repository.RoomRepository;
+import com.bd2.seniorhomeapp.senior.entity.Senior;
+import com.bd2.seniorhomeapp.senior.entity.SeniorStatus;
+import com.bd2.seniorhomeapp.senior.repository.SeniorRepository;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 import com.bd2.seniorhomeapp.seniorHome.repository.SeniorHomeRepository;
 import jakarta.transaction.Transactional;
@@ -30,6 +33,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final SeniorHomeRepository seniorHomeRepository;
     private final PositionRepository positionRepository;
     private final RoomRepository roomRepository;
+    private final SeniorRepository seniorRepository;
 
     @Override
     public List<Employee> getEmployees(Long id) {
@@ -156,6 +160,56 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.saveAll(employees);
     }
 
+    @Override
+    public Employee unassignEmployeeFromRoom(Long employeeId, Long roomId) {
+        Employee employee = findEmployeeById(employeeId);
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        employee.getRooms().remove(room);
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee assignSeniorToEmployee(Long employeeId, Long seniorId) {
+        Employee employee = findEmployeeById(employeeId);
+        Senior senior = findSeniorById(seniorId);
+
+        validateEmployeeAndSenior(employee, senior);
+        validateAssignableSenior(senior);
+        validateActiveEmployee(employee);
+
+        employee.getSeniors().add(senior);
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee unassignSeniorFromEmployee(Long employeeId, Long seniorId) {
+        Employee employee = findEmployeeById(employeeId);
+        Senior senior = findSeniorById(seniorId);
+
+        employee.getSeniors().remove(senior);
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee setEmployeeSeniors(Long employeeId, Set<Long> seniorIds) {
+        Employee employee = findEmployeeById(employeeId);
+        validateActiveEmployee(employee);
+
+        Set<Senior> seniors = seniorIds.stream()
+                .map(this::findSeniorById)
+                .peek(senior -> {
+                    validateEmployeeAndSenior(employee, senior);
+                    validateAssignableSenior(senior);
+                })
+                .collect(java.util.stream.Collectors.toSet());
+
+        employee.getSeniors().clear();
+        employee.getSeniors().addAll(seniors);
+        return employeeRepository.save(employee);
+    }
+
     private Employee findEmployeeById(Long id) {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
@@ -174,6 +228,32 @@ public class EmployeeServiceImpl implements EmployeeService {
     private void validateEmployeeAndRoom(Employee employee, Room room) {
         if (!employee.getSeniorHome().getId().equals(room.getSeniorHome().getId())) {
             throw new RuntimeException("Employee and room must belong to the same senior home");
+        }
+    }
+
+    private Senior findSeniorById(Long id) {
+        return seniorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Senior not found"));
+    }
+
+    private void validateEmployeeAndSenior(Employee employee, Senior senior) {
+        if (!employee.getSeniorHome().getId().equals(senior.getSeniorHome().getId())) {
+            throw new RuntimeException("Employee and senior must belong to the same senior home");
+        }
+    }
+
+    private void validateAssignableSenior(Senior senior) {
+        if (senior.getStatus() != SeniorStatus.ACTIVE) {
+            throw new RuntimeException("Only active seniors can be assigned to a caregiver");
+        }
+        if (senior.getDischargeDate() != null) {
+            throw new RuntimeException("Discharged seniors cannot be assigned to a caregiver");
+        }
+    }
+
+    private void validateActiveEmployee(Employee employee) {
+        if (employee.getFireDate() != null) {
+            throw new RuntimeException("Terminated employees cannot receive new senior assignments");
         }
     }
 

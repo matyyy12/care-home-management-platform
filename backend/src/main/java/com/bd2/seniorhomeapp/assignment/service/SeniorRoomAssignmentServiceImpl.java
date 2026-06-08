@@ -94,7 +94,6 @@ public class SeniorRoomAssignmentServiceImpl implements SeniorRoomAssignmentServ
         Room room = senior.getRoom();
         return new SeniorRoomAssignmentResponse(
                 senior.getSeniorId(),
-                senior.getSeniorId(),
                 senior.getFirstName() + " " + senior.getLastName(),
                 room.getId(),
                 room.getRoomNumber(),

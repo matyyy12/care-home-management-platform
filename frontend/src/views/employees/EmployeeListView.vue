@@ -14,6 +14,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEmployeeForm, useEmployees } from '@/composables/useEmployees'
+
 const { canWrite } = usePermissions('employees')
 const auth = useAuthStore()
 const { filterItems, scopedHomeSelectOptions } = useHomeScope()
@@ -79,7 +80,7 @@ function resetForm() {
   <div class="space-y-8">
     <PageHeader
       title="Pracownicy"
-      description="Personel domu seniora — stanowisko, adres, kierownik oraz oznaczenie pracownika medycznego."
+      description="Personel domu seniora — stanowisko, adres i oznaczenie pracownika medycznego. Przypisania do seniorów i pomieszczeń edytujesz w zakładce Przypisania."
     />
 
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>

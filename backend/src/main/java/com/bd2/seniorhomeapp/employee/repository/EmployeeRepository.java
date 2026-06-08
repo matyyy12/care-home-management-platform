@@ -37,4 +37,17 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             "rooms"
     })
     Optional<Employee> findById(Long id);
+
+    @EntityGraph(attributePaths = {
+            "address",
+            "address.postOffice",
+            "seniorHome",
+            "position",
+            "manager",
+            "medicalEmployee",
+            "seniors",
+            "activities",
+            "rooms"
+    })
+    List<Employee> findBySeniors_SeniorId(Long seniorId);
 }

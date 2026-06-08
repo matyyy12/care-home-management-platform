@@ -1,6 +1,6 @@
 export function mapSeniorRoomAssignmentFromApi(dto) {
   return {
-    id: dto.id,
+    id: dto.seniorId,
     type: 'SENIOR_ROOM',
     label: 'Senior → pokój',
     from: dto.seniorName,

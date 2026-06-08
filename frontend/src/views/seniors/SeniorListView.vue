@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -39,6 +39,8 @@ const form = ref({
   diseases: '',
 })
 
+const formNotice = ref('')
+
 watch(
   () => [auth.isHomeScoped, auth.assignedSeniorHomeId],
   () => {
@@ -48,8 +50,6 @@ watch(
   },
   { immediate: true },
 )
-
-const formNotice = ref('')
 
 async function handleSubmit() {
   try {
@@ -79,7 +79,7 @@ function statusBadge(row) {
   <div class="space-y-8">
     <PageHeader
       title="Seniorzy"
-      description="Dane osobowe, PESEL, choroby, zakwaterowanie oraz przypisania do pokoju i opiekunów."
+      description="Dane osobowe, PESEL, choroby i zakwaterowanie. Przypisania do pokoju i opiekunów edytujesz w zakładce Przypisania."
     />
 
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
@@ -134,7 +134,7 @@ function statusBadge(row) {
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-slate-900">Lista seniorów</h2>
       <p v-if="loading" class="text-sm text-slate-500">Ładowanie…</p>
-      <DataTable v-else :columns="columns" :rows="seniorList">
+      <DataTable v-else :columns="columns" :rows="seniorList" row-key="id">
         <template #cell-lastName="{ row }">
           <span class="font-medium">{{ row.lastName }}</span>
         </template>

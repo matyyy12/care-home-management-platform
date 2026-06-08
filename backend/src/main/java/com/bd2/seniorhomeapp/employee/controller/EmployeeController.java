@@ -2,6 +2,7 @@ package com.bd2.seniorhomeapp.employee.controller;
 
 import com.bd2.seniorhomeapp.employee.dto.request.EmployeeRequest;
 import com.bd2.seniorhomeapp.employee.dto.request.EmployeeRoomAssignmentRequest;
+import com.bd2.seniorhomeapp.employee.dto.request.EmployeeSeniorAssignmentRequest;
 import com.bd2.seniorhomeapp.employee.dto.request.EmployeeUpdateRequest;
 import com.bd2.seniorhomeapp.employee.dto.response.EmployeeResponse;
 import com.bd2.seniorhomeapp.employee.entity.Employee;
@@ -55,6 +56,34 @@ public class EmployeeController {
         List<EmployeeResponse> response = employeeService.assignEmployeesToRoom(request.employeeIds(), roomId)
                 .stream().map(this::mapToResponse).toList();
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping("/{employeeId}/rooms/{roomId}")
+    public ResponseEntity<?> unassignEmployeeFromRoom(@PathVariable Long employeeId,
+                                                    @PathVariable Long roomId) {
+        Employee employee = employeeService.unassignEmployeeFromRoom(employeeId, roomId);
+        return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(employee));
+    }
+
+    @PatchMapping("/{employeeId}/seniors/{seniorId}")
+    public ResponseEntity<?> assignSeniorToEmployee(@PathVariable Long employeeId,
+                                                    @PathVariable Long seniorId) {
+        Employee employee = employeeService.assignSeniorToEmployee(employeeId, seniorId);
+        return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(employee));
+    }
+
+    @DeleteMapping("/{employeeId}/seniors/{seniorId}")
+    public ResponseEntity<?> unassignSeniorFromEmployee(@PathVariable Long employeeId,
+                                                        @PathVariable Long seniorId) {
+        Employee employee = employeeService.unassignSeniorFromEmployee(employeeId, seniorId);
+        return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(employee));
+    }
+
+    @PatchMapping("/{employeeId}/seniors")
+    public ResponseEntity<?> setEmployeeSeniors(@PathVariable Long employeeId,
+                                                @Valid @RequestBody EmployeeSeniorAssignmentRequest request) {
+        Employee employee = employeeService.setEmployeeSeniors(employeeId, request.seniorIds());
+        return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(employee));
     }
 
     @DeleteMapping("/{id}")
