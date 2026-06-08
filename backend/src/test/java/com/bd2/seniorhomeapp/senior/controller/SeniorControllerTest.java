@@ -9,11 +9,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,6 +21,7 @@ import com.bd2.seniorhomeapp.address.entity.Address;
 import com.bd2.seniorhomeapp.address.repository.AddressRepository;
 import com.bd2.seniorhomeapp.postOffice.entity.PostOffice;
 import com.bd2.seniorhomeapp.postOffice.repository.PostOfficeRepository;
+import com.bd2.seniorhomeapp.senior.repository.SeniorRepository;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 import com.bd2.seniorhomeapp.seniorHome.repository.SeniorHomeRepository;
 
@@ -40,10 +41,15 @@ class SeniorControllerTest {
 	@Autowired
 	private PostOfficeRepository postOfficeRepository;
 
+	@Autowired
+	private SeniorRepository seniorRepository;
+
 	private Long seniorHomeId;
 
 	@BeforeEach
 	void setUp() {
+		seniorRepository.deleteAll();
+
 		PostOffice postOffice = postOfficeRepository.findByPostalCode("00-001")
 				.orElseGet(() -> {
 					PostOffice newPostOffice = new PostOffice();
@@ -92,7 +98,9 @@ class SeniorControllerTest {
 
 		mockMvc.perform(get("/api/seniors").with(authenticatedUser()))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].firstName").value("Jan"));
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].firstName").value("Jan"))
+				.andExpect(jsonPath("$[0].lastName").value("Kowalski"));
 	}
 
 	@Test
