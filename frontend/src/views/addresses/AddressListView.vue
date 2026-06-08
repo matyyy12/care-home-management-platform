@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -11,8 +11,6 @@ import AlertMessage from '@/components/ui/AlertMessage.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { useAddressBook } from '@/composables/useAddressBook'
-import { sourceNotice } from '@/composables/apiMode'
-
 const { canWrite } = usePermissions('addresses')
 const {
   addresses,
@@ -21,12 +19,9 @@ const {
   loading,
   saving,
   error,
-  usingMock,
   addAddress,
   addPostOffice,
 } = useAddressBook()
-
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const addressColumns = [
   { key: 'city', label: 'Miasto' },
@@ -61,7 +56,6 @@ async function submitPostOffice() {
       description="Rejestr adresów z powiązaniem do poczty — ograniczenie duplikatów danych adresowych."
     />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
 
     <ReadOnlyNotice v-if="!canWrite" />

@@ -47,7 +47,7 @@ async function submit() {
       <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Senior House</p>
       <h1 class="mt-2 text-2xl font-semibold text-slate-900">Logowanie</h1>
       <p class="mt-2 text-sm text-slate-600">
-        Uzyj konta demo, aby wejsc do panelu z rola przypisana przez backend.
+        Uzyj konta pokazowego, aby wejsc do panelu z rola przypisana przez backend.
       </p>
 
       <AlertMessage v-if="error" variant="error" class="mt-6">
@@ -75,7 +75,7 @@ async function submit() {
       </form>
 
       <div class="mt-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        <p class="font-medium text-slate-800">Konta demo</p>
+        <p class="font-medium text-slate-800">Konta pokazowe</p>
         <p class="mt-1">Haslo dla kazdego konta: <span class="font-medium">Password123!</span></p>
         <ul class="mt-3 space-y-1">
           <li v-for="account in demoAccounts" :key="account">

@@ -1,28 +1,6 @@
 <script setup>
-import { computed } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
-import DataTable from '@/components/ui/DataTable.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
-import { useHomeScope } from '@/composables/useHomeScope'
-import { employeeWorkloadReport } from '@/mock/data'
-
-const { filterItems } = useHomeScope()
-const reportRows = computed(() => filterItems(employeeWorkloadReport))
-
-const columns = [
-  { key: 'employee', label: 'Pracownik' },
-  { key: 'position', label: 'Stanowisko' },
-  { key: 'seniorHome', label: 'Dom seniora' },
-  {
-    key: 'isMedical',
-    label: 'Medyczny',
-    format: (row) => (row.isMedical ? 'Tak' : 'Nie'),
-  },
-  { key: 'wards', label: 'Podopieczni' },
-  { key: 'rooms', label: 'Pomieszczenia' },
-  { key: 'activities', label: 'Zajęcia' },
-  { key: 'status', label: 'Status' },
-]
+import EmptyState from '@/components/ui/EmptyState.vue'
 </script>
 
 <template>
@@ -32,12 +10,9 @@ const columns = [
       description="Zakres przydziałów — podopieczni, pomieszczenia i prowadzone zajęcia."
     />
 
-    <DataTable :columns="columns" :rows="reportRows">
-      <template #cell-status="{ row }">
-        <AppBadge :variant="row.status === 'Aktywny' ? 'success' : 'neutral'">
-          {{ row.status }}
-        </AppBadge>
-      </template>
-    </DataTable>
+    <EmptyState
+      title="Raport niedostępny"
+      description="Endpoint raportu obciążenia pracowników nie jest jeszcze zaimplementowany w backendzie."
+    />
   </div>
 </template>

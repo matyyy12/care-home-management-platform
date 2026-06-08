@@ -70,16 +70,3 @@ export function mapSeniorHomeToUpdateRequest(form) {
 
   return payload
 }
-
-export function mapSeniorHomeFromMock(record) {
-  return {
-    id: record.id,
-    name: record.name,
-    phone: record.phone,
-    email: record.email ?? '',
-    website: record.website ?? '',
-    addressLabel: record.addressLabel ?? '—',
-    foundedAt: record.foundedAt ?? '',
-    owners: record.owners ?? [],
-  }
-}

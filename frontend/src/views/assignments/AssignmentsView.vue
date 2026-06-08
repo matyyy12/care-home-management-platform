@@ -14,9 +14,6 @@ import { useHomeScope } from '@/composables/useHomeScope'
 import { useSeniorRoomAssignments } from '@/composables/useSeniorRoomAssignments'
 import { useSeniors } from '@/composables/useSeniors'
 import { useRooms } from '@/composables/useRooms'
-import { sourceNotice } from '@/composables/apiMode'
-import { mapSeniorRoomAssignmentFromMock } from '@/api/mappers/assignmentMapper'
-import { assignments as mockOtherAssignments } from '@/mock/data'
 
 const { canWrite } = usePermissions('assignments')
 const { filterItems } = useHomeScope()
@@ -26,7 +23,6 @@ const {
   saving,
   deletingSeniorId,
   error,
-  usingMock,
   assign,
   unassign,
 } = useSeniorRoomAssignments()
@@ -35,8 +31,6 @@ const { filteredRooms, reload: reloadRooms } = useRooms()
 
 const formNotice = ref('')
 const form = ref({ seniorId: '', roomId: '' })
-
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const activeSeniors = computed(() =>
   seniorList.value.filter((s) => s.status === 'ACTIVE' && !s.dischargeDate),
@@ -58,10 +52,6 @@ const roomOptions = computed(() =>
     value: r.id,
     label: `${r.number} — ${r.seniorHome} (${r.assignedSeniors ?? 0}/${r.capacity} miejsc)`,
   })),
-)
-
-const otherAssignments = computed(() =>
-  filterItems(mockOtherAssignments.filter((a) => a.type !== 'SENIOR_ROOM').map(mapSeniorRoomAssignmentFromMock)),
 )
 
 const seniorRoomRows = computed(() =>
@@ -113,7 +103,6 @@ async function handleUnassign(row) {
 
     <ReadOnlyNotice v-if="!canWrite" />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
     <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
 
@@ -123,7 +112,7 @@ async function handleUnassign(row) {
       </ul>
     </AlertMessage>
 
-    <AppCard v-if="canWrite && !usingMock" title="Przypisz seniora do pokoju">
+    <AppCard v-if="canWrite" title="Przypisz seniora do pokoju">
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleAssign">
         <FormField label="Senior" required>
           <AppSelect v-model="form.seniorId" :options="seniorOptions" required />
@@ -145,7 +134,7 @@ async function handleUnassign(row) {
         <template #cell-label="{ row }">
           <AppBadge variant="neutral">{{ row.label }}</AppBadge>
         </template>
-        <template v-if="canWrite && !usingMock" #actions="{ row }">
+        <template v-if="canWrite" #actions="{ row }">
           <AppButton
             variant="danger"
             size="sm"
@@ -155,14 +144,6 @@ async function handleUnassign(row) {
           >
             Usuń
           </AppButton>
-        </template>
-      </DataTable>
-    </AppCard>
-
-    <AppCard v-if="otherAssignments.length" title="Pozostałe przypisania (demo)">
-      <DataTable :columns="columns" :rows="otherAssignments">
-        <template #cell-label="{ row }">
-          <AppBadge variant="neutral">{{ row.label }}</AppBadge>
         </template>
       </DataTable>
     </AppCard>

@@ -1,13 +1,13 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { getCurrentUser, login as apiLogin } from '@/api/auth'
+import { fetchSeniorHomes } from '@/api/seniorHomes'
 import {
   ROLE_LABELS,
   canRoleReadRoute,
   canRoleWriteRoute,
   isHomeScopedRole,
 } from '@/constants/roles'
-import { seniorHomes as mockSeniorHomes } from '@/mock/data'
 
 const TOKEN_STORAGE_KEY = 'seniorhouse-app-token'
 const LEGACY_USER_STORAGE_KEY = 'seniorhouse-app-user'
@@ -33,6 +33,7 @@ function persistToken(nextToken) {
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(loadStoredToken())
   const user = ref(null)
+  const seniorHomes = ref([])
   const isLoading = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value))
@@ -44,13 +45,13 @@ export const useAuthStore = defineStore('auth', () => {
   const isHomeScoped = computed(() => isHomeScopedRole(role.value))
 
   const assignedHome = computed(
-    () => mockSeniorHomes.find((home) => home.id === assignedSeniorHomeId.value) ?? null,
+    () => seniorHomes.value.find((home) => home.id === assignedSeniorHomeId.value) ?? null,
   )
 
   const assignedHomeName = computed(() => assignedHome.value?.name ?? '')
 
   const seniorHomeOptions = computed(() =>
-    mockSeniorHomes.map((home) => ({ value: home.id, label: home.name })),
+    seniorHomes.value.map((home) => ({ value: home.id, label: home.name })),
   )
 
   function setSession(nextToken, nextUser) {
@@ -61,11 +62,27 @@ export const useAuthStore = defineStore('auth', () => {
 
   function clearSession() {
     setSession(null, null)
+    seniorHomes.value = []
+  }
+
+  async function loadSeniorHomes() {
+    if (!token.value) {
+      seniorHomes.value = []
+      return
+    }
+
+    try {
+      const homes = await fetchSeniorHomes()
+      seniorHomes.value = homes.map((home) => ({ id: home.id, name: home.name }))
+    } catch {
+      seniorHomes.value = []
+    }
   }
 
   async function login(credentials) {
     const response = await apiLogin(credentials)
     setSession(response.token, response.user)
+    await loadSeniorHomes()
     return response.user
   }
 
@@ -76,6 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const currentUser = await getCurrentUser()
       user.value = currentUser
+      await loadSeniorHomes()
       return currentUser
     } catch (error) {
       clearSession()
@@ -114,6 +132,7 @@ export const useAuthStore = defineStore('auth', () => {
     seniorHomeOptions,
     login,
     loadCurrentUser,
+    loadSeniorHomes,
     logout,
     clearSession,
     canRead,

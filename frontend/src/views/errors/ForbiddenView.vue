@@ -17,7 +17,7 @@ const auth = useAuthStore()
     />
     <AppCard>
       <p class="text-sm text-slate-600">
-        Wybierz inną pozycję z menu lub zmień rolę w panelu bocznym (tryb demonstracyjny).
+        Wybierz inną pozycję z menu lub zaloguj się na konto z odpowiednimi uprawnieniami.
       </p>
       <AppButton class="mt-4" @click="router.push({ name: 'dashboard' })">Wróć na pulpit</AppButton>
     </AppCard>

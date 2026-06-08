@@ -11,16 +11,3 @@ export function mapRoomOccupancyFromApi(dto, homeNameById = new Map()) {
     standard: dto.standard,
   }
 }
-
-export function mapRoomOccupancyFromMock(record) {
-  return {
-    id: record.id,
-    roomNumber: record.roomNumber,
-    floor: record.floor,
-    seniorHome: record.seniorHome,
-    capacity: record.capacity,
-    assigned: record.assigned,
-    free: record.free,
-    standard: record.standard,
-  }
-}

@@ -1,27 +1,6 @@
 <script setup>
 import PageHeader from '@/components/layout/PageHeader.vue'
-import DataTable from '@/components/ui/DataTable.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import { computed } from 'vue'
-import { useHomeScope } from '@/composables/useHomeScope'
-import { dataQualityIssues } from '@/mock/data'
-
-const { filterItems } = useHomeScope()
-
-const columns = [
-  { key: 'category', label: 'Obszar' },
-  { key: 'issue', label: 'Problem' },
-  { key: 'entity', label: 'Obiekt' },
-]
-
-const issues = computed(() => filterItems(dataQualityIssues))
-
-function severityVariant(severity) {
-  if (severity === 'error') return 'danger'
-  if (severity === 'warning') return 'warning'
-  return 'neutral'
-}
 </script>
 
 <template>
@@ -32,15 +11,8 @@ function severityVariant(severity) {
     />
 
     <EmptyState
-      v-if="issues.length === 0"
-      title="Brak wykrytych problemów"
-      description="Dane są kompletne i poprawne."
+      title="Raport niedostępny"
+      description="Endpoint raportu jakości danych nie jest jeszcze zaimplementowany w backendzie."
     />
-
-    <DataTable v-else :columns="columns" :rows="issues">
-      <template #cell-issue="{ row }">
-        <AppBadge :variant="severityVariant(row.severity)">{{ row.issue }}</AppBadge>
-      </template>
-    </DataTable>
   </div>
 </template>

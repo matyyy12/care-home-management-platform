@@ -3,17 +3,13 @@ import { computed } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
-import {
-  seniors,
-  employees,
-  seniorHomes,
-  dataQualityIssues,
-} from '@/mock/data'
 import { useRoomOccupancyReport } from '@/composables/useRoomOccupancyReport'
+import { useSeniors } from '@/composables/useSeniors'
+import { useEmployees } from '@/composables/useEmployees'
+import { useSeniorHomes } from '@/composables/useSeniorHomes'
 import { ROLES } from '@/constants/roles'
 import {
   DASHBOARD_SECTION_LABELS,
-  DEMO_FOOTER,
   dashboardDescription,
   dashboardTitle,
   statLinkLabel,
@@ -32,18 +28,21 @@ import {
 
 const auth = useAuthStore()
 const { filterItems, isScoped, homeName } = useHomeScope()
+const { seniorList } = useSeniors()
+const { employeeList } = useEmployees()
+const { homeList } = useSeniorHomes()
 const { rows: roomOccupancyRows } = useRoomOccupancyReport()
 
-const scopedSeniors = computed(() => filterItems(seniors))
-const scopedEmployees = computed(() => filterItems(employees))
+const scopedSeniors = computed(() => filterItems(seniorList.value, { homeIdKey: 'seniorHomeId' }))
+const scopedEmployees = computed(() => filterItems(employeeList.value, { homeIdKey: 'seniorHomeId' }))
 const scopedSeniorHomes = computed(() => {
-  if (!isScoped.value) return seniorHomes
-  return seniorHomes.filter((home) => home.name === homeName.value)
+  if (!isScoped.value) return homeList.value
+  return homeList.value.filter((home) => home.name === homeName.value)
 })
 const scopedRoomOccupancyReport = computed(() =>
   filterItems(roomOccupancyRows.value, { homeIdKey: 'seniorHomeId' }),
 )
-const scopedQualityIssues = computed(() => filterItems(dataQualityIssues))
+const scopedQualityIssues = computed(() => [])
 
 const pageTitle = computed(() => dashboardTitle(auth.role, auth.roleLabel))
 const pageDescription = computed(() => dashboardDescription(auth.role, auth.roleLabel))
@@ -257,7 +256,5 @@ const stats = computed(() => buildDashboardStats())
         <span class="font-medium text-slate-900">{{ roomOccupancy.percent }}%</span>.
       </p>
     </AppCard>
-
-    <p class="text-xs text-slate-500">{{ DEMO_FOOTER }}</p>
   </div>
 </template>

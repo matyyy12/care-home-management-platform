@@ -1,4 +1,4 @@
-/** Metryki operacyjne pulpitu — czyste funkcje na danych mock / API. */
+/** Metryki operacyjne pulpitu — czyste funkcje na danych z API. */
 
 export function computeRoomOccupancy(rows) {
   if (!rows.length) {

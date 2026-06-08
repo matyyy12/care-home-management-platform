@@ -14,32 +14,25 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useSeniorHomes } from '@/composables/useSeniorHomes'
 import { useOwners } from '@/composables/useOwners'
 import { attachOwnersToHomes } from '@/api/mappers/ownerMapper'
-import { sourceNotice } from '@/composables/apiMode'
-
 const { canWrite } = usePermissions('senior-homes')
-const { homeList, loading: homesLoading, saving: homesSaving, error: homesError, usingMock: homesUsingMock, addHome } =
+const { homeList, loading: homesLoading, saving: homesSaving, error: homesError, addHome } =
   useSeniorHomes()
 const {
   ownerList,
   loading: ownersLoading,
   saving: ownersSaving,
   error: ownersError,
-  usingMock: ownersUsingMock,
   reload: reloadOwners,
   addOwner,
 } = useOwners(() => homeList.value)
 
 watch(homeList, () => {
-  if (!homesUsingMock.value && !ownersUsingMock.value) {
-    reloadOwners()
-  }
+  reloadOwners()
 })
 
-const usingMock = computed(() => homesUsingMock.value || ownersUsingMock.value)
 const loading = computed(() => homesLoading.value || ownersLoading.value)
 const saving = computed(() => homesSaving.value || ownersSaving.value)
 const error = computed(() => homesError.value || ownersError.value)
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const homeOptions = computed(() =>
   homeList.value.map((home) => ({ value: home.id, label: home.name })),
@@ -126,7 +119,6 @@ async function handleOwnerSubmit() {
       description="Ewidencja domów seniora: dane kontaktowe, adres i właściciele przypisani do domu."
     />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
 
     <ReadOnlyNotice v-if="!canWrite" />
@@ -165,7 +157,7 @@ async function handleOwnerSubmit() {
         </FormField>
         <div class="sm:col-span-2">
           <AppButton type="submit" :disabled="saving">
-            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+            {{ saving ? 'Zapisywanie…' : 'Zapisz' }}
           </AppButton>
         </div>
       </form>
@@ -211,7 +203,7 @@ async function handleOwnerSubmit() {
         </FormField>
         <div class="sm:col-span-2">
           <AppButton type="submit" :disabled="saving || homeOptions.length === 0">
-            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+            {{ saving ? 'Zapisywanie…' : 'Zapisz' }}
           </AppButton>
         </div>
       </form>

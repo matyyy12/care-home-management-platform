@@ -60,28 +60,6 @@ export function mapOwnerToUpdateRequest(form) {
   return payload
 }
 
-export function mapOwnerFromMock(record, homeNameById = new Map()) {
-  return {
-    id: record.id,
-    name: record.name,
-    surname: record.surname,
-    displayName: `${record.name} ${record.surname}`,
-    seniorHomeId: record.seniorHomeId,
-    seniorHome: homeNameById.get(record.seniorHomeId) ?? '—',
-    city: record.city,
-    street: record.street,
-    apartmentNumber: record.apartmentNumber,
-    postalCode: record.postalCode,
-    postOfficeCity: record.postOfficeCity,
-    addressLabel: formatAddressLabel({
-      city: record.city,
-      street: record.street,
-      number: record.apartmentNumber,
-      postalCode: record.postalCode,
-    }),
-  }
-}
-
 export function attachOwnersToHomes(homes, owners) {
   const ownersByHomeId = new Map()
 

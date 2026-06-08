@@ -16,7 +16,6 @@ import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { emptyRoomForm, useRooms } from '@/composables/useRooms'
 import { useEmployees } from '@/composables/useEmployees'
-import { sourceNotice } from '@/composables/apiMode'
 import { GAME_ROOM_EQUIPMENT_TYPES, ROOM_TYPES } from '@/constants/enums'
 
 const { canWrite } = usePermissions('rooms')
@@ -29,7 +28,6 @@ const {
   loading,
   saving,
   error,
-  usingMock,
   deletingId,
   addRoom,
   editRoom,
@@ -43,7 +41,6 @@ const {
   assignEmployeesToRoom,
 } = useEmployees()
 
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 const homeOptions = computed(() => scopedHomeSelectOptions(seniorHomes.value))
 const roomList = computed(() => filterItems(roomsByHomeFilter.value))
 
@@ -191,10 +188,8 @@ function removeEquipmentItem(target, index) {
 
 async function handleSubmit() {
   try {
-    const result = await addRoom(form.value)
-    formNotice.value = result.savedLocally
-      ? 'Pomieszczenie zapisane lokalnie (tryb demo).'
-      : 'Pomieszczenie zapisane w bazie danych.'
+    await addRoom(form.value)
+    formNotice.value = 'Pomieszczenie zapisane w bazie danych.'
     form.value = {
       ...emptyRoomForm(),
       seniorHomeId: auth.isHomeScoped ? auth.assignedSeniorHomeId : '',
@@ -238,10 +233,8 @@ function showEditForm() {
 async function handleEditSubmit() {
   if (!manageRow.value) return
   try {
-    const result = await editRoom(manageRow.value.id, editForm.value)
-    formNotice.value = result.savedLocally
-      ? 'Zmiany zapisane lokalnie (tryb demo).'
-      : 'Zmiany zapisane w bazie danych.'
+    await editRoom(manageRow.value.id, editForm.value)
+    formNotice.value = 'Zmiany zapisane w bazie danych.'
     closeManage()
   } catch {
     formNotice.value = ''
@@ -261,13 +254,11 @@ async function handleRoomAssignmentSubmit() {
   if (!roomAssignmentForm.value.roomId || roomAssignmentForm.value.employeeIds.length === 0) return
 
   try {
-    const result = await assignEmployeesToRoom(
+    await assignEmployeesToRoom(
       roomAssignmentForm.value.employeeIds,
       roomAssignmentForm.value.roomId,
     )
-    formNotice.value = result.savedLocally
-      ? 'Przypisanie pracowników zapisane lokalnie (tryb demo).'
-      : 'Pracownicy przypisani do pomieszczenia.'
+    formNotice.value = 'Pracownicy przypisani do pomieszczenia.'
     roomAssignmentForm.value = { roomId: '', employeeIds: [] }
   } catch {
     formNotice.value = ''
@@ -279,10 +270,8 @@ async function handleAssignEmployee() {
   if (!row || employeeAssignmentForm.value.employeeIds.length === 0) return
 
   try {
-    const result = await assignEmployeesToRoom(employeeAssignmentForm.value.employeeIds, row.id)
-    formNotice.value = result.savedLocally
-      ? 'Przypisanie pracowników zapisane lokalnie (tryb demo).'
-      : 'Pracownicy przypisani do pomieszczenia.'
+    await assignEmployeesToRoom(employeeAssignmentForm.value.employeeIds, row.id)
+    formNotice.value = 'Pracownicy przypisani do pomieszczenia.'
     closeManage()
   } catch {
     formNotice.value = ''
@@ -293,10 +282,8 @@ async function confirmDelete() {
   const row = manageRow.value
   if (!row) return
   try {
-    const result = await removeRoom(row.id)
-    formNotice.value = result.savedLocally
-      ? 'Pomieszczenie usunięte lokalnie (tryb demo).'
-      : 'Pomieszczenie usunięte z bazy danych.'
+    await removeRoom(row.id)
+    formNotice.value = 'Pomieszczenie usunięte z bazy danych.'
     closeManage()
   } catch {
     formNotice.value = ''
@@ -315,7 +302,6 @@ function rowBusy(row) {
       description="Pokoje mieszkalne, gabinety i sale gier — z limitami miejsc i wyposażeniem."
     />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
     <AlertMessage v-if="employeeError" variant="error">{{ employeeError }}</AlertMessage>
     <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
@@ -398,7 +384,7 @@ function rowBusy(row) {
 
         <div class="sm:col-span-2">
           <AppButton type="submit" :disabled="saving">
-            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+            {{ saving ? 'Zapisywanie…' : 'Zapisz' }}
           </AppButton>
         </div>
       </form>

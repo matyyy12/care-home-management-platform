@@ -1,20 +1,3 @@
-function mockGameEquipment(record) {
-  if (record.gameEquipment?.length) {
-    return record.gameEquipment.map((item) => ({
-      type: item.type,
-      quantity: Number(item.quantity) || 1,
-    }))
-  }
-
-  const items = []
-  if (record.hasTv) items.push({ type: 'TV', quantity: 1 })
-  if (record.hasRadio) items.push({ type: 'RADIO', quantity: 1 })
-  if (record.computers) items.push({ type: 'COMPUTER', quantity: Number(record.computers) })
-  if (record.crosswords) items.push({ type: 'CROSSWORD', quantity: Number(record.crosswords) })
-  if (record.boardGames) items.push({ type: 'BOARD_GAME', quantity: Number(record.boardGames) })
-  return items
-}
-
 export function mapRoomFromApi(dto) {
   return {
     id: dto.id,
@@ -33,24 +16,6 @@ export function mapRoomFromApi(dto) {
       type: item.type,
       quantity: Number(item.quantity) || 1,
     })),
-  }
-}
-
-export function mapRoomFromMock(record) {
-  return {
-    id: record.id,
-    number: record.number,
-    floor: record.floor,
-    seniorHome: record.seniorHome ?? '—',
-    seniorHomeId: record.seniorHomeId ?? null,
-    inUse: Boolean(record.inUse),
-    type: record.type ?? null,
-    capacity: record.capacity ?? null,
-    standard: record.standard ?? '',
-    assignedSeniors: record.assignedSeniors ?? 0,
-    officeKind: record.officeKind ?? '',
-    equipment: record.equipment ?? '',
-    gameEquipment: mockGameEquipment(record),
   }
 }
 

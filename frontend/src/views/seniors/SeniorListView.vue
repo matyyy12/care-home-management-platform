@@ -13,14 +13,11 @@ import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { useSeniors } from '@/composables/useSeniors'
 import { useAuthStore } from '@/stores/auth'
-import { sourceNotice } from '@/composables/apiMode'
 import { GENDER_OPTIONS, SENIOR_STATUS_LABELS } from '@/constants/enums'
 
 const { canWrite, role } = usePermissions('seniors')
 const auth = useAuthStore()
-const { seniorList, homeOptions, loading, saving, error, usingMock, addSenior } = useSeniors()
-
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
+const { seniorList, homeOptions, loading, saving, error, addSenior } = useSeniors()
 
 const columns = [
   { key: 'lastName', label: 'Nazwisko' },
@@ -56,10 +53,8 @@ const formNotice = ref('')
 
 async function handleSubmit() {
   try {
-    const result = await addSenior(form.value)
-    formNotice.value = result.savedLocally
-      ? 'Senior zapisany lokalnie (tryb demo). Przypisanie pokoju i opiekuna zostanie obsłużone po pełnej integracji API.'
-      : 'Senior zapisany w bazie danych.'
+    await addSenior(form.value)
+    formNotice.value = 'Senior zapisany w bazie danych.'
     form.value = {
       firstName: '',
       lastName: '',
@@ -87,7 +82,6 @@ function statusBadge(row) {
       description="Dane osobowe, PESEL, choroby, zakwaterowanie oraz przypisania do pokoju i opiekunów."
     />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
     <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
 
@@ -131,7 +125,7 @@ function statusBadge(row) {
         </FormField>
         <div class="sm:col-span-2">
           <AppButton type="submit" :disabled="saving">
-            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+            {{ saving ? 'Zapisywanie…' : 'Zapisz' }}
           </AppButton>
         </div>
       </form>

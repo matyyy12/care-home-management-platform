@@ -16,7 +16,6 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { useActivities } from '@/composables/useActivities'
-import { sourceNotice } from '@/composables/apiMode'
 import { ACTIVITY_TYPES } from '@/constants/enums'
 
 const { canWrite } = usePermissions('activities')
@@ -29,7 +28,6 @@ const {
   loading,
   saving,
   error,
-  usingMock,
   deletingId,
   addActivity,
   editActivity,
@@ -37,7 +35,6 @@ const {
   seniorHomeIdForRow,
 } = useActivities()
 
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 const homeOptions = computed(() => scopedHomeSelectOptions(seniorHomes.value))
 const filteredActivities = computed(() => filterItems(activitiesByHomeFilter.value))
 
@@ -110,10 +107,8 @@ watch(
 
 async function handleSubmit() {
   try {
-    const result = await addActivity(form.value)
-    formNotice.value = result.savedLocally
-      ? 'Zajęcia zapisane lokalnie (tryb demo).'
-      : 'Zajęcia zapisane w bazie danych.'
+    await addActivity(form.value)
+    formNotice.value = 'Zajęcia zapisane w bazie danych.'
     form.value = {
       name: '',
       type: '',
@@ -172,10 +167,8 @@ function showEditForm() {
 async function handleEditSubmit() {
   if (!manageRow.value) return
   try {
-    const result = await editActivity(manageRow.value.id, editForm.value)
-    formNotice.value = result.savedLocally
-      ? 'Zmiany zapisane lokalnie (tryb demo).'
-      : 'Zmiany zapisane w bazie danych.'
+    await editActivity(manageRow.value.id, editForm.value)
+    formNotice.value = 'Zmiany zapisane w bazie danych.'
     closeManage()
   } catch {
     formNotice.value = ''
@@ -190,10 +183,8 @@ async function confirmDelete() {
   const row = manageRow.value
   if (!row) return
   try {
-    const result = await removeActivity(row.id)
-    formNotice.value = result.savedLocally
-      ? 'Zajęcia usunięte lokalnie (tryb demo).'
-      : 'Zajęcia usunięte z bazy danych.'
+    await removeActivity(row.id)
+    formNotice.value = 'Zajęcia usunięte z bazy danych.'
     closeManage()
   } catch {
     formNotice.value = ''
@@ -212,7 +203,6 @@ function rowBusy(row) {
       description="Zajęcia medyczne, rekreacyjne i kulturalne — cena, prowadzący i uczestnicy."
     />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
     <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
 
@@ -245,7 +235,7 @@ function rowBusy(row) {
         </FormField>
         <div class="sm:col-span-2">
           <AppButton type="submit" :disabled="saving">
-            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+            {{ saving ? 'Zapisywanie…' : 'Zapisz' }}
           </AppButton>
         </div>
       </form>

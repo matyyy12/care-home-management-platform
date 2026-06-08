@@ -41,7 +41,7 @@ const reports = computed(() => allReports.filter((r) => auth.canRead(r.routeName
   <div class="space-y-8">
     <PageHeader
       title="Raporty"
-      description="Część raportowa systemu — dane demonstracyjne, bez połączenia z backendem."
+      description="Raporty operacyjne i analityczne na podstawie danych z backendu."
     />
 
     <EmptyState

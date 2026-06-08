@@ -7,32 +7,10 @@ import {
 } from '@/api/employees'
 import { fetchPositions } from '@/api/positions'
 import { fetchSeniorHomes } from '@/api/seniorHomes'
-import {
-  buildHomeNameMap,
-  mapEmployeeFromApi,
-  mapEmployeeFromMock,
-} from '@/api/mappers/employeeMapper'
-import { mapPositionFromApi, mapPositionFromMock } from '@/api/mappers/positionMapper'
-import { mapSeniorHomeFromApi, mapSeniorHomeFromMock } from '@/api/mappers/seniorHomeMapper'
-import { apiEnabled } from '@/composables/apiMode'
+import { buildHomeNameMap, mapEmployeeFromApi } from '@/api/mappers/employeeMapper'
+import { mapPositionFromApi } from '@/api/mappers/positionMapper'
+import { mapSeniorHomeFromApi } from '@/api/mappers/seniorHomeMapper'
 import { useHomeScope } from '@/composables/useHomeScope'
-import {
-  employees as mockEmployees,
-  positions as mockPositions,
-  seniorHomes as mockSeniorHomes,
-} from '@/mock/data'
-
-function loadMockHomes() {
-  return mockSeniorHomes.map(mapSeniorHomeFromMock)
-}
-
-function loadMockPositions() {
-  return mockPositions.map(mapPositionFromMock)
-}
-
-function loadMockEmployees(homeNames) {
-  return mockEmployees.map((record) => mapEmployeeFromMock(record, homeNames))
-}
 
 export function emptyEmployeeForm() {
   return {
@@ -67,7 +45,6 @@ export function useEmployees() {
   const saving = ref(false)
   const assigning = ref(false)
   const error = ref(null)
-  const usingMock = ref(!apiEnabled)
 
   const employeeList = computed(() =>
     filterItems(allEmployees.value, { homeIdKey: 'seniorHomeId' }),
@@ -80,24 +57,9 @@ export function useEmployees() {
 
   const positions = computed(() => allPositions.value)
 
-  function applyMockData() {
-    const homes = loadMockHomes()
-    const homeNames = buildHomeNameMap(homes)
-    allSeniorHomes.value = homes
-    allPositions.value = loadMockPositions()
-    allEmployees.value = loadMockEmployees(homeNames)
-    usingMock.value = true
-  }
-
   async function reload() {
     loading.value = true
     error.value = null
-
-    if (!apiEnabled) {
-      applyMockData()
-      loading.value = false
-      return
-    }
 
     try {
       const [homes, positionsResult, employees] = await Promise.all([
@@ -106,42 +68,22 @@ export function useEmployees() {
         fetchEmployees(),
       ])
       allSeniorHomes.value = homes.map(mapSeniorHomeFromApi)
-      allPositions.value = positionsResult.length
-        ? positionsResult.map(mapPositionFromApi)
-        : loadMockPositions()
+      allPositions.value = positionsResult.map(mapPositionFromApi)
       const homeNames = buildHomeNameMap(allSeniorHomes.value)
       allEmployees.value = employees.map((dto) => mapEmployeeFromApi(dto, homeNames))
-      usingMock.value = false
     } catch (e) {
       error.value = e.message ?? 'Nie udało się połączyć z API'
-      applyMockData()
     } finally {
       loading.value = false
     }
   }
 
   async function addEmployee(form) {
-    if (usingMock.value) {
-      const home = seniorHomes.value.find((h) => String(h.id) === String(form.seniorHomeId))
-      const position = positions.value.find((p) => String(p.id) === String(form.positionId))
-      allEmployees.value.push(
-        mapEmployeeFromMock({
-          ...form,
-          id: Math.max(0, ...allEmployees.value.map((employee) => Number(employee.id) || 0)) + 1,
-          seniorHome: home?.name ?? '—',
-          position: position?.name ?? '—',
-          isMedical: form.isMedical === true || form.isMedical === 'true',
-        }),
-      )
-      return { savedLocally: true }
-    }
-
     saving.value = true
     error.value = null
     try {
       await createEmployee(form)
       await reload()
-      return { savedLocally: false }
     } catch (e) {
       error.value = e.message ?? 'Nie udało się zapisać pracownika'
       throw e
@@ -151,21 +93,11 @@ export function useEmployees() {
   }
 
   async function assignEmployeeToRoom(employeeId, roomId) {
-    if (usingMock.value) {
-      const employee = allEmployees.value.find((item) => String(item.id) === String(employeeId))
-      if (!employee) throw new Error('Nie znaleziono pracownika')
-      const roomIds = new Set(employee.roomIds ?? [])
-      roomIds.add(Number(roomId))
-      employee.roomIds = [...roomIds]
-      return { savedLocally: true }
-    }
-
     assigning.value = true
     error.value = null
     try {
       await assignEmployeeToRoomRequest(employeeId, roomId)
       await reload()
-      return { savedLocally: false }
     } catch (e) {
       error.value = e.message ?? 'Nie udało się przypisać pracownika do pomieszczenia'
       throw e
@@ -175,23 +107,11 @@ export function useEmployees() {
   }
 
   async function assignEmployeesToRoom(employeeIds, roomId) {
-    if (usingMock.value) {
-      const selectedIds = new Set(employeeIds.map((id) => String(id)))
-      allEmployees.value.forEach((employee) => {
-        if (!selectedIds.has(String(employee.id))) return
-        const roomIds = new Set(employee.roomIds ?? [])
-        roomIds.add(Number(roomId))
-        employee.roomIds = [...roomIds]
-      })
-      return { savedLocally: true }
-    }
-
     assigning.value = true
     error.value = null
     try {
       await assignEmployeesToRoomRequest(employeeIds, roomId)
       await reload()
-      return { savedLocally: false }
     } catch (e) {
       error.value = e.message ?? 'Nie udało się przypisać pracowników do pomieszczenia'
       throw e
@@ -210,7 +130,6 @@ export function useEmployees() {
     saving,
     assigning,
     error,
-    usingMock,
     reload,
     addEmployee,
     assignEmployeeToRoom,

@@ -12,14 +12,3 @@ export function mapSeniorRoomAssignmentFromApi(dto) {
     seniorHome: dto.seniorHomeName ?? '—',
   }
 }
-
-export function mapSeniorRoomAssignmentFromMock(record) {
-  return {
-    id: record.id,
-    type: record.type ?? 'SENIOR_ROOM',
-    label: record.label ?? 'Senior → pokój',
-    from: record.from,
-    to: record.to,
-    seniorHome: record.seniorHome,
-  }
-}

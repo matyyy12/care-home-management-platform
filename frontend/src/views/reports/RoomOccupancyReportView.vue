@@ -12,14 +12,10 @@ import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { useRoomOccupancyReport } from '@/composables/useRoomOccupancyReport'
 import { useRooms } from '@/composables/useRooms'
-import { sourceNotice } from '@/composables/apiMode'
-
 const auth = useAuthStore()
 const { filterItems, scopedHomeSelectOptions } = useHomeScope()
-const { rows, loading, error, usingMock, reload } = useRoomOccupancyReport()
+const { rows, loading, error, reload } = useRoomOccupancyReport()
 const { seniorHomes } = useRooms()
-
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const floorFilter = ref('')
 const standardFilter = ref('')
@@ -69,7 +65,6 @@ function applyFilters() {
       description="Dostępność miejsc w pokojach mieszkalnych z filtrowaniem po domu, piętrze i standardzie."
     />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
 
     <AppCard title="Filtry">

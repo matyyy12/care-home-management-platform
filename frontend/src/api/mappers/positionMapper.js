@@ -12,11 +12,3 @@ export function mapPositionToCreateRequest(form) {
     description: (form.duties ?? '').trim() || '—',
   }
 }
-
-export function mapPositionFromMock(record) {
-  return {
-    id: record.id,
-    name: record.name,
-    duties: record.duties ?? '',
-  }
-}

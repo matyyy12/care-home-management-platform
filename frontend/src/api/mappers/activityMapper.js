@@ -24,16 +24,3 @@ export function mapActivityToCreateRequest(form) {
 export function mapActivityToUpdateRequest(form) {
   return mapActivityToCreateRequest(form)
 }
-
-export function mapActivityFromMock(record) {
-  return {
-    id: record.id,
-    name: record.name,
-    type: record.type,
-    price: Number(record.price),
-    seniorHome: record.seniorHome ?? '—',
-    description: record.description ?? '',
-    instructors: record.instructors ?? 0,
-    participants: record.participants ?? 0,
-  }
-}

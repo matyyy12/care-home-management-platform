@@ -24,29 +24,6 @@ export function mapEmployeeFromApi(dto, homeNames = new Map()) {
   }
 }
 
-export function mapEmployeeFromMock(record, homeNames = new Map()) {
-  return {
-    id: record.id,
-    firstName: record.firstName,
-    lastName: record.lastName,
-    seniorHomeId: record.seniorHomeId ?? null,
-    seniorHome:
-      record.seniorHome ?? homeNames.get(Number(record.seniorHomeId)) ?? '—',
-    positionId: record.positionId ?? null,
-    position: record.position ?? '—',
-    phone: record.phone ?? '',
-    email: record.email ?? '',
-    birthDate: record.birthDate ?? '',
-    hiredAt: record.hiredAt ?? '',
-    terminatedAt: record.terminatedAt ?? null,
-    isMedical: Boolean(record.isMedical),
-    licenseNumber: record.licenseNumber ?? '',
-    specialization: record.specialization ?? '',
-    salary: record.salary ?? 0,
-    roomIds: record.roomIds ?? [],
-  }
-}
-
 export function mapEmployeeToCreateRequest(form) {
   const payload = {
     name: form.firstName.trim(),

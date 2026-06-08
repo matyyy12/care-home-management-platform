@@ -23,17 +23,6 @@ export function mapAddressToCreateRequest(form) {
   }
 }
 
-export function mapAddressFromMock(record) {
-  return {
-    id: record.id,
-    city: record.city,
-    street: record.street,
-    apartmentNumber: record.apartmentNumber,
-    postOffice: record.postOffice,
-    postOfficeId: null,
-  }
-}
-
 export function mapPostOfficeFromApi(dto) {
   return {
     id: dto.id,
@@ -46,13 +35,5 @@ export function mapPostOfficeToCreateRequest(form) {
   return {
     postalCode: form.postalCode.trim(),
     city: form.city.trim(),
-  }
-}
-
-export function mapPostOfficeFromMock(record) {
-  return {
-    id: record.id,
-    postalCode: record.postalCode,
-    city: record.city,
   }
 }

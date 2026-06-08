@@ -14,8 +14,6 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEmployeeForm, useEmployees } from '@/composables/useEmployees'
-import { sourceNotice } from '@/composables/apiMode'
-
 const { canWrite } = usePermissions('employees')
 const auth = useAuthStore()
 const { filterItems, scopedHomeSelectOptions } = useHomeScope()
@@ -26,14 +24,12 @@ const {
   loading,
   saving,
   error,
-  usingMock,
   addEmployee,
 } = useEmployees()
 
 const employeeList = computed(() => filterItems(employeesByScope.value, { homeIdKey: 'seniorHomeId' }))
 const homeOptions = computed(() => scopedHomeSelectOptions(seniorHomes.value))
 const positionOptions = computed(() => positions.value.map((p) => ({ value: p.id, label: p.name })))
-const dataSourceNotice = computed(() => sourceNotice(usingMock.value))
 
 const columns = [
   { key: 'lastName', label: 'Nazwisko' },
@@ -63,10 +59,8 @@ watch(
 
 async function handleSubmit() {
   try {
-    const result = await addEmployee(form.value)
-    formNotice.value = result.savedLocally
-      ? 'Pracownik zapisany lokalnie (tryb demo).'
-      : 'Pracownik zapisany w bazie danych.'
+    await addEmployee(form.value)
+    formNotice.value = 'Pracownik zapisany w bazie danych.'
     resetForm()
   } catch {
     formNotice.value = ''
@@ -88,7 +82,6 @@ function resetForm() {
       description="Personel domu seniora — stanowisko, adres, kierownik oraz oznaczenie pracownika medycznego."
     />
 
-    <AlertMessage v-if="dataSourceNotice" variant="info">{{ dataSourceNotice }}</AlertMessage>
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
     <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
 
@@ -162,7 +155,7 @@ function resetForm() {
         </template>
         <div class="sm:col-span-2">
           <AppButton type="submit" :disabled="saving">
-            {{ saving ? 'Zapisywanie…' : usingMock ? 'Zapisz (lokalnie)' : 'Zapisz' }}
+            {{ saving ? 'Zapisywanie…' : 'Zapisz' }}
           </AppButton>
         </div>
       </form>

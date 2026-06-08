@@ -42,28 +42,6 @@ export function mapSeniorFromApi(dto, homeNameById = new Map()) {
   }
 }
 
-export function mapSeniorFromMock(record, homeNameById = new Map()) {
-  const seniorHomeId =
-    [...homeNameById.entries()].find(([, name]) => name === record.seniorHome)?.[0] ?? null
-
-  return {
-    id: record.id,
-    firstName: record.firstName,
-    lastName: record.lastName,
-    pesel: record.pesel,
-    birthDate: record.birthDate,
-    gender: record.gender,
-    seniorHomeId,
-    seniorHome: record.seniorHome,
-    accommodationDate: record.accommodationDate,
-    dischargeDate: record.dischargeDate,
-    status: record.status,
-    roomNumber: record.roomNumber,
-    guardians: record.guardians,
-    diseases: record.diseases,
-  }
-}
-
 export function buildHomeNameMap(homes) {
   return new Map(homes.map((home) => [home.id, home.name]))
 }

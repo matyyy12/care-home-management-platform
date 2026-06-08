@@ -27,9 +27,6 @@ export const DASHBOARD_SECTION_LABELS = {
   directorOverview: 'Przegląd organizacji',
 }
 
-export const DEMO_FOOTER =
-  'Dane demonstracyjne. Po wdrożeniu logowania Twoja rola będzie przypisana do konta — w demo możesz ją zmienić w panelu bocznym.'
-
 const REPORT_ROUTE_PREFIX = 'report-'
 
 /** Etykieta linku na karcie KPI — raport vs ewidencja. */
