@@ -18,10 +18,10 @@ defineEmits(['close'])
     >
       <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" @click="$emit('close')" />
       <div
-        class="relative z-10 w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+        class="relative z-10 flex max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col rounded-xl border border-slate-200 bg-white shadow-xl"
         @click.stop
       >
-        <div class="mb-4 flex items-start justify-between gap-4">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-4">
           <h2 v-if="title" class="text-lg font-semibold text-slate-900">{{ title }}</h2>
           <button
             type="button"
@@ -32,7 +32,9 @@ defineEmits(['close'])
             ✕
           </button>
         </div>
-        <slot />
+        <div class="min-h-0 overflow-y-auto px-6 py-5">
+          <slot />
+        </div>
       </div>
     </div>
   </Teleport>

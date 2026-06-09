@@ -4,6 +4,7 @@ import {
   assignEmployeesToRoom as assignEmployeesToRoomRequest,
   createEmployee,
   fetchEmployees,
+  updateEmployee,
 } from '@/api/employees'
 import { fetchPositions } from '@/api/positions'
 import { fetchSeniorHomes } from '@/api/seniorHomes'
@@ -92,6 +93,20 @@ export function useEmployees() {
     }
   }
 
+  async function editEmployee(id, form) {
+    saving.value = true
+    error.value = null
+    try {
+      await updateEmployee(id, form)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się zaktualizować pracownika'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   async function assignEmployeeToRoom(employeeId, roomId) {
     assigning.value = true
     error.value = null
@@ -132,6 +147,7 @@ export function useEmployees() {
     error,
     reload,
     addEmployee,
+    editEmployee,
     assignEmployeeToRoom,
     assignEmployeesToRoom,
   }

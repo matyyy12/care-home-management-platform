@@ -12,3 +12,10 @@ export function mapPositionToCreateRequest(form) {
     description: (form.duties ?? '').trim() || '—',
   }
 }
+
+export function mapPositionToUpdateRequest(form) {
+  return {
+    name: form.name.trim(),
+    description: (form.duties ?? '').trim() || '—',
+  }
+}
