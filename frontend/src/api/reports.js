@@ -8,3 +8,13 @@ export async function fetchRoomOccupancyReport(params = {}) {
   const qs = query.toString()
   return apiGet(`/api/reports/room-occupancy${qs ? `?${qs}` : ''}`)
 }
+
+export async function fetchSeniorActivityReport(params = {}) {
+  const query = new URLSearchParams()
+  if (params.seniorHomeId != null && params.seniorHomeId !== '') {
+    query.set('seniorHomeId', String(params.seniorHomeId))
+  }
+  if (params.status?.trim()) query.set('status', params.status.trim())
+  const qs = query.toString()
+  return apiGet(`/api/reports/senior-activity${qs ? `?${qs}` : ''}`)
+}
