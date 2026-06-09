@@ -34,7 +34,7 @@ public class SeniorController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(created);
 	}
 
-	@PutMapping("/{id}")
+	@PatchMapping("/{id}")
 	public ResponseEntity<?> update(
 			@PathVariable Long id,
 			@Valid @RequestBody UpdateSeniorRequest request) {

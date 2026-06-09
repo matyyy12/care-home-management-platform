@@ -1,5 +1,6 @@
 package com.bd2.seniorhomeapp.senior.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -46,7 +47,7 @@ public class SeniorServiceImpl implements SeniorService {
 				request.lastName().trim(),
 				request.birthDate(),
 				request.pesel().trim(),
-				request.diseases().stream().map(String::trim).toList(),
+				trimDiseases(request.diseases()),
 				request.gender().trim(),
 				request.accommodationDate(),
 				request.dischargeDate(),
@@ -60,15 +61,34 @@ public class SeniorServiceImpl implements SeniorService {
 		Senior senior = seniorRepository.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior not found"));
 
-		senior.setFirstName(request.firstName().trim());
-		senior.setLastName(request.lastName().trim());
-		senior.setBirthDate(request.birthDate());
-		senior.setPesel(request.pesel().trim());
-		senior.setDiseases(request.diseases().stream().map(String::trim).toList());
-		senior.setGender(request.gender().trim());
-		senior.setAccommodationDate(request.accommodationDate());
-		senior.setDischargeDate(request.dischargeDate());
-		senior.setSeniorHome(findSeniorHome(request.seniorHomeId()));
+		if (request.firstName() != null && !request.firstName().isBlank()) {
+			senior.setFirstName(request.firstName().trim());
+		}
+		if (request.lastName() != null && !request.lastName().isBlank()) {
+			senior.setLastName(request.lastName().trim());
+		}
+		if (request.birthDate() != null) {
+			senior.setBirthDate(request.birthDate());
+		}
+		if (request.pesel() != null && !request.pesel().isBlank()) {
+			senior.setPesel(request.pesel().trim());
+		}
+		if (request.diseases() != null) {
+			senior.getDiseases().clear();
+			senior.getDiseases().addAll(trimDiseases(request.diseases()));
+		}
+		if (request.gender() != null && !request.gender().isBlank()) {
+			senior.setGender(request.gender().trim());
+		}
+		if (request.accommodationDate() != null) {
+			senior.setAccommodationDate(request.accommodationDate());
+		}
+		if (request.dischargeDate() != null) {
+			senior.setDischargeDate(request.dischargeDate());
+		}
+		if (request.seniorHomeId() != null) {
+			senior.setSeniorHome(findSeniorHome(request.seniorHomeId()));
+		}
 
 		return mapToResponse(seniorRepository.save(senior));
 	}
@@ -85,5 +105,12 @@ public class SeniorServiceImpl implements SeniorService {
 	private SeniorHome findSeniorHome(Long id) {
 		return seniorHomeRepository.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior home not found"));
+	}
+
+	private List<String> trimDiseases(List<String> diseases) {
+		return diseases.stream()
+				.map(String::trim)
+				.filter(disease -> !disease.isBlank())
+				.collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 }
