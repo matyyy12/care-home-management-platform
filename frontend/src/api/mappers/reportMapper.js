@@ -29,3 +29,26 @@ export function mapSeniorActivityFromApi(dto) {
       dto.participationCount == null ? 'Brak danych' : String(dto.participationCount),
   }
 }
+
+export function mapEmployeeWorkloadFromApi(dto) {
+  return {
+    id: dto.employeeId,
+    employeeId: dto.employeeId,
+    employeeName: dto.employeeName,
+    seniorHomeId: dto.seniorHomeId,
+    seniorHome: dto.seniorHome,
+    positionId: dto.positionId,
+    positionName: dto.positionName,
+    managerName: dto.managerName ?? '—',
+    medicalEmployee: Boolean(dto.medicalEmployee),
+    seniorCount: dto.seniorCount ?? 0,
+    roomCount: dto.roomCount ?? 0,
+    activityCount: dto.activityCount ?? 0,
+    medicalActivityCount: dto.medicalActivityCount ?? 0,
+    totalAssignments: dto.totalAssignments ?? 0,
+    workloadScore: dto.workloadScore ?? 0,
+    employmentStatus: dto.employmentStatus,
+    hasWarning: Boolean(dto.hasWarning),
+    warningMessage: dto.warningMessage ?? '',
+  }
+}

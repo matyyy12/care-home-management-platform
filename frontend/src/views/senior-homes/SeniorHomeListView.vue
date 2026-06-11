@@ -14,6 +14,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useSeniorHomes } from '@/composables/useSeniorHomes'
 import { useOwners } from '@/composables/useOwners'
 import { attachOwnersToHomes } from '@/api/mappers/ownerMapper'
+import { downloadSeniorHomeSummaryPdf } from '@/api/reports'
 const { canWrite } = usePermissions('senior-homes')
 const {
   homeList,
@@ -95,6 +96,7 @@ const ownerForm = ref(emptyOwnerForm())
 const homeEditForm = ref(emptyHomeForm())
 const ownerEditForm = ref(emptyOwnerForm())
 const formNotice = ref('')
+const pdfLoadingHomeId = ref(null)
 const homeDetailRow = ref(null)
 const homeDetailStep = ref('details')
 const ownerDetailRow = ref(null)
@@ -209,6 +211,25 @@ async function handleOwnerEditSubmit() {
     closeOwnerDetail()
   } catch {
     formNotice.value = ''
+  }
+}
+
+async function handleDownloadHomePdf() {
+  if (!homeDetailRow.value) return
+
+  pdfLoadingHomeId.value = homeDetailRow.value.id
+  try {
+    const blob = await downloadSeniorHomeSummaryPdf(homeDetailRow.value.id)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `raport-domu-seniora-${homeDetailRow.value.id}.pdf`
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    formNotice.value = ''
+  } finally {
+    pdfLoadingHomeId.value = null
   }
 }
 </script>
@@ -407,6 +428,14 @@ async function handleOwnerEditSubmit() {
             @click="showHomeEditForm"
           >
             Modyfikuj
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="secondary"
+            :disabled="pdfLoadingHomeId === homeDetailRow?.id"
+            @click="handleDownloadHomePdf"
+          >
+            {{ pdfLoadingHomeId === homeDetailRow?.id ? 'Generowanie…' : 'Pobierz PDF' }}
           </AppButton>
           <AppButton class="flex-1 justify-center" variant="ghost" @click="closeHomeDetail">
             Zamknij
