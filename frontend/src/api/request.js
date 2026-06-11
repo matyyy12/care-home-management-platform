@@ -50,6 +50,7 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (response) => {
     if (response.status === 204) return null
+    if (response.config.responseType === 'blob') return response.data
     const contentType = response.headers['content-type'] ?? ''
     if (contentType.includes('application/json')) {
       return response.data
@@ -104,5 +105,12 @@ export function apiPut(path, data) {
 export function apiDelete(path) {
   return apiRequest(path, {
     method: 'DELETE',
+  })
+}
+
+export function apiBlob(path) {
+  return apiRequest(path, {
+    method: 'GET',
+    responseType: 'blob',
   })
 }
