@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPost } from '@/api/request'
+import { apiDelete, apiGet, apiPatch, apiPost } from '@/api/request'
 import {
   mapEquipmentToCreateRequest,
   mapEquipmentToUpdateRequest,
@@ -14,4 +14,8 @@ export async function createEquipment(form) {
 
 export async function updateEquipment(id, form) {
   return apiPatch(`/api/equipment/${id}`, mapEquipmentToUpdateRequest(form))
+}
+
+export async function deleteEquipment(id) {
+  return apiDelete(`/api/equipment/${id}`)
 }

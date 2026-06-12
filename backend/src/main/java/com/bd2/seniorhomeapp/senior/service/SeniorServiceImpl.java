@@ -87,6 +87,14 @@ public class SeniorServiceImpl implements SeniorService {
         return SeniorResponse.from(senior);
     }
 
+    @Override
+    public void delete(Long id) {
+        if (!seniorRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior not found");
+        }
+        seniorRepository.deleteById(id);
+    }
+
     private SeniorHome findSeniorHome(Long id) {
         return seniorHomeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior home not found"));

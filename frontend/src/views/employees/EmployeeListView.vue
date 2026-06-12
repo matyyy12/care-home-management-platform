@@ -27,6 +27,7 @@ const {
   error,
   addEmployee,
   editEmployee,
+  removeEmployee,
 } = useEmployees()
 
 const employeeList = computed(() => filterItems(employeesByScope.value, { homeIdKey: 'seniorHomeId' }))
@@ -120,12 +121,28 @@ function showEditForm() {
   detailStep.value = 'edit'
 }
 
+function showDeleteConfirm() {
+  detailStep.value = 'delete'
+}
+
 async function handleEditSubmit() {
   if (!detailRow.value) return
 
   try {
     await editEmployee(detailRow.value.id, editForm.value)
     formNotice.value = 'Dane pracownika zaktualizowane.'
+    closeDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleDeleteConfirm() {
+  if (!detailRow.value) return
+
+  try {
+    await removeEmployee(detailRow.value.id)
+    formNotice.value = 'Pracownik usunięty z bazy danych.'
     closeDetail()
   } catch {
     formNotice.value = ''
@@ -294,7 +311,7 @@ async function handleEditSubmit() {
       </dl>
 
       <form
-        v-else-if="detailRow"
+        v-else-if="detailRow && detailStep === 'edit'"
         class="grid gap-4 sm:grid-cols-2"
         @submit.prevent="handleEditSubmit"
       >
@@ -367,6 +384,16 @@ async function handleEditSubmit() {
         </template>
       </form>
 
+      <div v-else-if="detailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć pracownika
+          <strong>{{ detailRow.firstName }} {{ detailRow.lastName }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Jeżeli pracownik ma powiązania w bazie, backend może zablokować usunięcie i pokaże powód.
+        </p>
+      </div>
+
       <div class="mt-5 flex flex-wrap gap-2">
         <template v-if="detailStep === 'details'">
           <AppButton
@@ -377,13 +404,40 @@ async function handleEditSubmit() {
           >
             Modyfikuj
           </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showDeleteConfirm"
+          >
+            Usuń
+          </AppButton>
           <AppButton class="flex-1 justify-center" variant="ghost" @click="closeDetail">
             Zamknij
           </AppButton>
         </template>
-        <template v-else>
+        <template v-else-if="detailStep === 'edit'">
           <AppButton class="flex-1 justify-center" :disabled="saving" @click="handleEditSubmit">
             {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="detailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń pracownika' }}
           </AppButton>
           <AppButton
             class="flex-1 justify-center"

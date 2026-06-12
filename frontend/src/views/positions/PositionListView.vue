@@ -14,7 +14,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { usePositions } from '@/composables/usePositions'
 
 const { canWrite } = usePermissions('positions')
-const { positionList, loading, saving, error, addPosition, editPosition } = usePositions()
+const { positionList, loading, saving, error, addPosition, editPosition, removePosition } = usePositions()
 
 const columns = [
   { key: 'name', label: 'Nazwa stanowiska' },
@@ -57,12 +57,28 @@ function showEditForm() {
   detailStep.value = 'edit'
 }
 
+function showDeleteConfirm() {
+  detailStep.value = 'delete'
+}
+
 async function handleEditSubmit() {
   if (!detailRow.value) return
 
   try {
     await editPosition(detailRow.value.id, editForm.value)
     formNotice.value = 'Stanowisko zaktualizowane.'
+    closeDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleDeleteConfirm() {
+  if (!detailRow.value) return
+
+  try {
+    await removePosition(detailRow.value.id)
+    formNotice.value = 'Stanowisko usunięte.'
     closeDetail()
   } catch {
     formNotice.value = ''
@@ -117,7 +133,7 @@ async function handleEditSubmit() {
         </div>
       </dl>
 
-      <form v-else-if="detailRow" class="space-y-4" @submit.prevent="handleEditSubmit">
+      <form v-else-if="detailRow && detailStep === 'edit'" class="space-y-4" @submit.prevent="handleEditSubmit">
         <FormField label="Nazwa" required>
           <AppInput v-model="editForm.name" maxlength="20" required />
         </FormField>
@@ -125,6 +141,15 @@ async function handleEditSubmit() {
           <AppTextarea v-model="editForm.duties" maxlength="400" />
         </FormField>
       </form>
+
+      <div v-else-if="detailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć stanowisko <strong>{{ detailRow.name }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Usunięcie może zostać zablokowane, jeśli stanowisko jest przypisane do pracowników.
+        </p>
+      </div>
 
       <div class="mt-5 flex flex-wrap gap-2">
         <template v-if="detailStep === 'details'">
@@ -136,13 +161,40 @@ async function handleEditSubmit() {
           >
             Modyfikuj
           </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showDeleteConfirm"
+          >
+            Usuń
+          </AppButton>
           <AppButton class="flex-1 justify-center" variant="ghost" @click="closeDetail">
             Zamknij
           </AppButton>
         </template>
-        <template v-else>
+        <template v-else-if="detailStep === 'edit'">
           <AppButton class="flex-1 justify-center" :disabled="saving" @click="handleEditSubmit">
             {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="detailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń stanowisko' }}
           </AppButton>
           <AppButton
             class="flex-1 justify-center"

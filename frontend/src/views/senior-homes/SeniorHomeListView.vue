@@ -23,6 +23,7 @@ const {
   error: homesError,
   addHome,
   editHome,
+  removeHome,
 } =
   useSeniorHomes()
 const {
@@ -33,6 +34,7 @@ const {
   reload: reloadOwners,
   addOwner,
   editOwner,
+  removeOwner,
 } = useOwners(() => homeList.value)
 
 watch(homeList, () => {
@@ -41,7 +43,8 @@ watch(homeList, () => {
 
 const loading = computed(() => homesLoading.value || ownersLoading.value)
 const saving = computed(() => homesSaving.value || ownersSaving.value)
-const error = computed(() => homesError.value || ownersError.value)
+const pdfError = ref('')
+const error = computed(() => homesError.value || ownersError.value || pdfError.value)
 
 const homeOptions = computed(() =>
   homeList.value.map((home) => ({ value: home.id, label: home.name })),
@@ -190,6 +193,14 @@ function showOwnerEditForm() {
   ownerDetailStep.value = 'edit'
 }
 
+function showHomeDeleteConfirm() {
+  homeDetailStep.value = 'delete'
+}
+
+function showOwnerDeleteConfirm() {
+  ownerDetailStep.value = 'delete'
+}
+
 async function handleHomeEditSubmit() {
   if (!homeDetailRow.value) return
 
@@ -214,10 +225,35 @@ async function handleOwnerEditSubmit() {
   }
 }
 
+async function handleHomeDeleteConfirm() {
+  if (!homeDetailRow.value) return
+
+  try {
+    await removeHome(homeDetailRow.value.id)
+    formNotice.value = 'Dom seniora usunięty z bazy danych.'
+    closeHomeDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleOwnerDeleteConfirm() {
+  if (!ownerDetailRow.value) return
+
+  try {
+    await removeOwner(ownerDetailRow.value.id)
+    formNotice.value = 'Właściciel usunięty z bazy danych.'
+    closeOwnerDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
 async function handleDownloadHomePdf() {
   if (!homeDetailRow.value) return
 
   pdfLoadingHomeId.value = homeDetailRow.value.id
+  pdfError.value = ''
   try {
     const blob = await downloadSeniorHomeSummaryPdf(homeDetailRow.value.id)
     const url = URL.createObjectURL(blob)
@@ -226,7 +262,8 @@ async function handleDownloadHomePdf() {
     link.download = `raport-domu-seniora-${homeDetailRow.value.id}.pdf`
     link.click()
     URL.revokeObjectURL(url)
-  } catch {
+  } catch (e) {
+    pdfError.value = e.message ?? 'Nie udało się pobrać raportu PDF'
     formNotice.value = ''
   } finally {
     pdfLoadingHomeId.value = null
@@ -386,7 +423,11 @@ async function handleDownloadHomePdf() {
         </div>
       </dl>
 
-      <form v-else-if="homeDetailRow" class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleHomeEditSubmit">
+      <form
+        v-else-if="homeDetailRow && homeDetailStep === 'edit'"
+        class="grid gap-4 sm:grid-cols-2"
+        @submit.prevent="handleHomeEditSubmit"
+      >
         <FormField label="Nazwa">
           <AppInput v-model="homeEditForm.name" maxlength="20" />
         </FormField>
@@ -419,6 +460,16 @@ async function handleDownloadHomePdf() {
         </FormField>
       </form>
 
+      <div v-else-if="homeDetailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć dom seniora <strong>{{ homeDetailRow.name }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Usunięcie może zostać zablokowane, jeśli dom ma przypisanych seniorów, pracowników,
+          pomieszczenia albo właścicieli.
+        </p>
+      </div>
+
       <div class="mt-5 flex flex-wrap gap-2">
         <template v-if="homeDetailStep === 'details'">
           <AppButton
@@ -428,6 +479,14 @@ async function handleDownloadHomePdf() {
             @click="showHomeEditForm"
           >
             Modyfikuj
+          </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showHomeDeleteConfirm"
+          >
+            Usuń
           </AppButton>
           <AppButton
             class="flex-1 justify-center"
@@ -441,9 +500,28 @@ async function handleDownloadHomePdf() {
             Zamknij
           </AppButton>
         </template>
-        <template v-else>
+        <template v-else-if="homeDetailStep === 'edit'">
           <AppButton class="flex-1 justify-center" :disabled="saving" @click="handleHomeEditSubmit">
             {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="homeDetailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleHomeDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń dom' }}
           </AppButton>
           <AppButton
             class="flex-1 justify-center"
@@ -482,7 +560,11 @@ async function handleDownloadHomePdf() {
         </div>
       </dl>
 
-      <form v-else-if="ownerDetailRow" class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleOwnerEditSubmit">
+      <form
+        v-else-if="ownerDetailRow && ownerDetailStep === 'edit'"
+        class="grid gap-4 sm:grid-cols-2"
+        @submit.prevent="handleOwnerEditSubmit"
+      >
         <FormField label="Imię">
           <AppInput v-model="ownerEditForm.name" maxlength="30" />
         </FormField>
@@ -509,6 +591,16 @@ async function handleDownloadHomePdf() {
         </FormField>
       </form>
 
+      <div v-else-if="ownerDetailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć właściciela
+          <strong>{{ ownerDetailRow.displayName }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Jeżeli rekord ma powiązania w bazie, backend może zablokować usunięcie i pokaże powód.
+        </p>
+      </div>
+
       <div class="mt-5 flex flex-wrap gap-2">
         <template v-if="ownerDetailStep === 'details'">
           <AppButton
@@ -519,13 +611,40 @@ async function handleDownloadHomePdf() {
           >
             Modyfikuj
           </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showOwnerDeleteConfirm"
+          >
+            Usuń
+          </AppButton>
           <AppButton class="flex-1 justify-center" variant="ghost" @click="closeOwnerDetail">
             Zamknij
           </AppButton>
         </template>
-        <template v-else>
+        <template v-else-if="ownerDetailStep === 'edit'">
           <AppButton class="flex-1 justify-center" :disabled="saving" @click="handleOwnerEditSubmit">
             {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="ownerDetailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleOwnerDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń właściciela' }}
           </AppButton>
           <AppButton
             class="flex-1 justify-center"

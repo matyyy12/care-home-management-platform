@@ -3,6 +3,7 @@ import {
   assignEmployeeToRoom as assignEmployeeToRoomRequest,
   assignEmployeesToRoom as assignEmployeesToRoomRequest,
   createEmployee,
+  deleteEmployee,
   fetchEmployees,
   updateEmployee,
 } from '@/api/employees'
@@ -135,6 +136,20 @@ export function useEmployees() {
     }
   }
 
+  async function removeEmployee(id) {
+    saving.value = true
+    error.value = null
+    try {
+      await deleteEmployee(id)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć pracownika'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   onMounted(reload)
 
   return {
@@ -148,6 +163,7 @@ export function useEmployees() {
     reload,
     addEmployee,
     editEmployee,
+    removeEmployee,
     assignEmployeeToRoom,
     assignEmployeesToRoom,
   }

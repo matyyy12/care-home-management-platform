@@ -41,4 +41,10 @@ public class SeniorController {
 		SeniorResponse seniorResponse = seniorService.update(id, request);
 		return ResponseEntity.status(HttpStatus.OK).body(seniorResponse);
 	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> delete(@PathVariable Long id) {
+		seniorService.delete(id);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
 }

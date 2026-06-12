@@ -14,7 +14,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEquipment } from '@/composables/useEquipment'
 
 const { canWrite } = usePermissions('equipment')
-const { equipmentList, loading, saving, error, addEquipment, editEquipment } = useEquipment()
+const { equipmentList, loading, saving, error, addEquipment, editEquipment, removeEquipment } = useEquipment()
 
 const columns = [
   { key: 'inventoryNumber', label: 'Nr inwentarzowy' },
@@ -74,12 +74,28 @@ function showEditForm() {
   detailStep.value = 'edit'
 }
 
+function showDeleteConfirm() {
+  detailStep.value = 'delete'
+}
+
 async function handleEditSubmit() {
   if (!detailRow.value) return
 
   try {
     await editEquipment(detailRow.value.id, editForm.value)
     formNotice.value = 'Sprzęt zaktualizowany.'
+    closeDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleDeleteConfirm() {
+  if (!detailRow.value) return
+
+  try {
+    await removeEquipment(detailRow.value.id)
+    formNotice.value = 'Sprzęt usunięty.'
     closeDetail()
   } catch {
     formNotice.value = ''
@@ -163,7 +179,11 @@ async function handleEditSubmit() {
         </div>
       </dl>
 
-      <form v-else-if="detailRow" class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleEditSubmit">
+      <form
+        v-else-if="detailRow && detailStep === 'edit'"
+        class="grid gap-4 sm:grid-cols-2"
+        @submit.prevent="handleEditSubmit"
+      >
         <FormField label="Nr inwentarzowy" required>
           <AppInput v-model="editForm.inventoryNumber" maxlength="30" required />
         </FormField>
@@ -184,6 +204,15 @@ async function handleEditSubmit() {
         </FormField>
       </form>
 
+      <div v-else-if="detailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć sprzęt <strong>{{ detailRow.name }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Jeżeli sprzęt ma powiązania w bazie, backend może zablokować usunięcie i pokaże powód.
+        </p>
+      </div>
+
       <div class="mt-5 flex flex-wrap gap-2">
         <template v-if="detailStep === 'details'">
           <AppButton
@@ -194,13 +223,40 @@ async function handleEditSubmit() {
           >
             Modyfikuj
           </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showDeleteConfirm"
+          >
+            Usuń
+          </AppButton>
           <AppButton class="flex-1 justify-center" variant="ghost" @click="closeDetail">
             Zamknij
           </AppButton>
         </template>
-        <template v-else>
+        <template v-else-if="detailStep === 'edit'">
           <AppButton class="flex-1 justify-center" :disabled="saving" @click="handleEditSubmit">
             {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="detailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń sprzęt' }}
           </AppButton>
           <AppButton
             class="flex-1 justify-center"
