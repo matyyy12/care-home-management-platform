@@ -37,3 +37,13 @@ export async function fetchEmployeeWorkloadReport(params = {}) {
 export async function downloadSeniorHomeSummaryPdf(homeId) {
   return apiBlob(`/api/reports/senior-home-summary/${homeId}/pdf`)
 }
+
+export async function fetchDataQualityReport(params = {}) {
+  const query = new URLSearchParams()
+  if (params.seniorHomeId != null && params.seniorHomeId !== '') {
+    query.set('seniorHomeId', String(params.seniorHomeId))
+  }
+  if (params.severity?.trim()) query.set('severity', params.severity.trim())
+  const qs = query.toString()
+  return apiGet(`/api/reports/data-quality${qs ? `?${qs}` : ''}`)
+}
