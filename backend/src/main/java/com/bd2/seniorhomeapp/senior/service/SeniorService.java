@@ -12,4 +12,6 @@ public interface SeniorService {
 	SeniorResponse create(CreateSeniorRequest request);
 
 	SeniorResponse update(Long id, UpdateSeniorRequest request);
+
+	void delete(Long id);
 }

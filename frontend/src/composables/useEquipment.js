@@ -1,5 +1,5 @@
 import { onMounted, ref } from 'vue'
-import { createEquipment, fetchEquipment, updateEquipment } from '@/api/equipment'
+import { createEquipment, deleteEquipment, fetchEquipment, updateEquipment } from '@/api/equipment'
 import { mapEquipmentFromApi } from '@/api/mappers/equipmentMapper'
 
 export function useEquipment() {
@@ -52,6 +52,21 @@ export function useEquipment() {
     }
   }
 
+  async function removeEquipment(id) {
+    saving.value = true
+    error.value = null
+
+    try {
+      await deleteEquipment(id)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć sprzętu'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   onMounted(reload)
 
   return {
@@ -62,5 +77,6 @@ export function useEquipment() {
     reload,
     addEquipment,
     editEquipment,
+    removeEquipment,
   }
 }

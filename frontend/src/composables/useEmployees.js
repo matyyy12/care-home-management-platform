@@ -4,6 +4,7 @@ import {
   assignEmployeesToRoom as assignEmployeesToRoomRequest,
   assignSeniorToEmployee as assignSeniorToEmployeeRequest,
   createEmployee,
+  deleteEmployee,
   fetchEmployees,
   setEmployeeSeniors as setEmployeeSeniorsRequest,
   unassignEmployeeFromRoom as unassignEmployeeFromRoomRequest,
@@ -195,6 +196,20 @@ export function useEmployees() {
     }
   }
 
+  async function removeEmployee(id) {
+    saving.value = true
+    error.value = null
+    try {
+      await deleteEmployee(id)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć pracownika'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   onMounted(reload)
 
   return {
@@ -208,6 +223,7 @@ export function useEmployees() {
     reload,
     addEmployee,
     editEmployee,
+    removeEmployee,
     assignEmployeeToRoom,
     assignEmployeesToRoom,
     unassignEmployeeFromRoom,

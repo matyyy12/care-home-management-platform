@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPost } from '@/api/request'
+import { apiDelete, apiGet, apiPatch, apiPost } from '@/api/request'
 import { mapPositionToCreateRequest, mapPositionToUpdateRequest } from '@/api/mappers/positionMapper'
 
 export async function fetchPositions() {
@@ -11,4 +11,8 @@ export async function createPosition(form) {
 
 export async function updatePosition(id, form) {
   return apiPatch(`/api/positions/${id}`, mapPositionToUpdateRequest(form))
+}
+
+export async function deletePosition(id) {
+  return apiDelete(`/api/positions/${id}`)
 }

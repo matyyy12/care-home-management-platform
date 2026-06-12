@@ -17,9 +17,32 @@ export class ApiError extends Error {
 
 function errorMessage(status, body) {
   if (body?.message) return body.message
+  if (body?.detail) return body.detail
+  if (body?.title && body?.status) return `${body.title} (${body.status})`
   if (typeof body === 'string') return body
   if (Array.isArray(body?.errors)) return body.errors.join(', ')
+  if (body?.errors && typeof body.errors === 'object') {
+    return Object.values(body.errors).flat().join(', ')
+  }
   return `Błąd serwera (${status})`
+}
+
+async function parseErrorBody(error) {
+  const body = error.response.data
+  if (!(body instanceof Blob)) return body
+
+  const contentType = error.response.headers['content-type'] ?? body.type ?? ''
+  const text = await body.text()
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(text)
+    } catch {
+      return text
+    }
+  }
+
+  return text
 }
 
 const http = axios.create({
@@ -57,9 +80,10 @@ http.interceptors.response.use(
     }
     return null
   },
-  (error) => {
+  async (error) => {
     if (axios.isAxiosError(error) && error.response) {
-      const { status, data: body } = error.response
+      const { status } = error.response
+      const body = await parseErrorBody(error)
       if (status === 401) {
         auth.onUnauthorized?.()
       }

@@ -93,6 +93,13 @@ public class SeniorServiceImpl implements SeniorService {
 		return mapToResponse(seniorRepository.save(senior));
 	}
 
+	@Override
+	public void delete(Long id) {
+		if (!seniorRepository.existsById(id)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior not found");
+		}
+		seniorRepository.deleteById(id);
+	}
 	private SeniorResponse mapToResponse(Senior senior) {
 		List<Employee> guardians = employeeRepository.findBySeniors_SeniorId(senior.getSeniorId());
 		List<Long> guardianIds = guardians.stream().map(Employee::getId).toList();

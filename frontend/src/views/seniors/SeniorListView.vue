@@ -18,7 +18,7 @@ import { GENDER_OPTIONS, SENIOR_STATUS_LABELS } from '@/constants/enums'
 
 const { canWrite, role } = usePermissions('seniors')
 const auth = useAuthStore()
-const { seniorList, homeOptions, loading, saving, error, addSenior, editSenior } = useSeniors()
+const { seniorList, homeOptions, loading, saving, error, addSenior, editSenior, removeSenior } = useSeniors()
 
 const columns = [
   { key: 'lastName', label: 'Nazwisko' },
@@ -119,12 +119,28 @@ function showEditForm() {
   detailStep.value = 'edit'
 }
 
+function showDeleteConfirm() {
+  detailStep.value = 'delete'
+}
+
 async function handleEditSubmit() {
   if (!detailRow.value) return
 
   try {
     await editSenior(detailRow.value.id, editForm.value)
     formNotice.value = 'Dane seniora zaktualizowane.'
+    closeDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleDeleteConfirm() {
+  if (!detailRow.value) return
+
+  try {
+    await removeSenior(detailRow.value.id)
+    formNotice.value = 'Senior usunięty z bazy danych.'
     closeDetail()
   } catch {
     formNotice.value = ''
@@ -256,7 +272,7 @@ async function handleEditSubmit() {
       </dl>
 
       <form
-        v-else-if="detailRow"
+        v-else-if="detailRow && detailStep === 'edit'"
         id="senior-edit-form"
         class="space-y-4"
         @submit.prevent="handleEditSubmit"
@@ -295,6 +311,16 @@ async function handleEditSubmit() {
         </FormField>
       </form>
 
+      <div v-else-if="detailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć seniora
+          <strong>{{ detailRow.firstName }} {{ detailRow.lastName }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Jeżeli rekord ma powiązania w bazie, backend może zablokować usunięcie i pokaże powód.
+        </p>
+      </div>
+
       <div class="mt-5 flex flex-wrap gap-2">
         <template v-if="detailStep === 'details'">
           <AppButton
@@ -305,11 +331,19 @@ async function handleEditSubmit() {
           >
             Modyfikuj
           </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showDeleteConfirm"
+          >
+            Usuń
+          </AppButton>
           <AppButton class="flex-1 justify-center" variant="ghost" @click="closeDetail">
             Zamknij
           </AppButton>
         </template>
-        <template v-else>
+        <template v-else-if="detailStep === 'edit'">
           <AppButton
             form="senior-edit-form"
             type="submit"
@@ -317,6 +351,25 @@ async function handleEditSubmit() {
             :disabled="saving"
           >
             {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="detailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń seniora' }}
           </AppButton>
           <AppButton
             class="flex-1 justify-center"
