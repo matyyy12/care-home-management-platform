@@ -52,3 +52,18 @@ export function mapEmployeeWorkloadFromApi(dto) {
     warningMessage: dto.warningMessage ?? '',
   }
 }
+
+export function mapDataQualityIssueFromApi(dto) {
+  return {
+    id: `${dto.module}-${dto.objectType}-${dto.objectId}-${dto.description}`,
+    severity: dto.severity,
+    module: dto.module,
+    objectType: dto.objectType,
+    objectId: dto.objectId,
+    objectName: dto.objectName,
+    seniorHomeId: dto.seniorHomeId,
+    seniorHome: dto.seniorHome,
+    description: dto.description,
+    suggestedAction: dto.suggestedAction,
+  }
+}
