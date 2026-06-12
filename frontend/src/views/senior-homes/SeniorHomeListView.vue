@@ -332,7 +332,13 @@ async function handleDownloadHomePdf() {
         :columns="homeColumns"
         :rows="displayHomes"
         @row-click="openHomeDetail"
-      />
+      >
+        <template #actions="{ row }">
+          <AppButton variant="secondary" size="sm" @click="openHomeDetail(row)">
+            Szczegóły
+          </AppButton>
+        </template>
+      </DataTable>
     </section>
 
     <AppCard v-if="canWrite" title="Dodaj właściciela">
@@ -381,7 +387,13 @@ async function handleDownloadHomePdf() {
         :columns="ownerColumns"
         :rows="ownerList"
         @row-click="openOwnerDetail"
-      />
+      >
+        <template #actions="{ row }">
+          <AppButton variant="secondary" size="sm" @click="openOwnerDetail(row)">
+            Szczegóły
+          </AppButton>
+        </template>
+      </DataTable>
     </section>
 
     <AppModal :open="homeDetailOpen" :title="homeDetailRow?.name ?? ''" @close="closeHomeDetail">

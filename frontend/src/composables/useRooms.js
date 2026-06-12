@@ -11,7 +11,7 @@ export function emptyRoomForm() {
     seniorHomeId: '',
     type: '',
     capacity: 2,
-    standard: '',
+    standard: 'BASIC',
     officeKind: '',
     equipmentDescription: '',
     gameEquipment: [],

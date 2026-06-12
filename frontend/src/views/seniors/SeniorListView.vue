@@ -14,7 +14,7 @@ import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { useSeniors } from '@/composables/useSeniors'
 import { useAuthStore } from '@/stores/auth'
-import { GENDER_OPTIONS, SENIOR_STATUS_LABELS } from '@/constants/enums'
+import { GENDER_LABELS, GENDER_OPTIONS, SENIOR_STATUS_LABELS } from '@/constants/enums'
 
 const { canWrite, role } = usePermissions('seniors')
 const auth = useAuthStore()
@@ -224,6 +224,11 @@ async function handleDeleteConfirm() {
             {{ SENIOR_STATUS_LABELS[row.status] ?? row.status }}
           </AppBadge>
         </template>
+        <template #actions="{ row }">
+          <AppButton variant="secondary" size="sm" @click="openDetail(row)">
+            Szczegóły
+          </AppButton>
+        </template>
       </DataTable>
     </section>
 
@@ -239,7 +244,7 @@ async function handleDeleteConfirm() {
         </div>
         <div>
           <dt class="font-medium text-slate-700">Płeć</dt>
-          <dd class="mt-0.5 text-slate-800">{{ detailRow.gender || '—' }}</dd>
+          <dd class="mt-0.5 text-slate-800">{{ GENDER_LABELS[detailRow.gender] ?? detailRow.gender ?? '—' }}</dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">Dom seniora</dt>

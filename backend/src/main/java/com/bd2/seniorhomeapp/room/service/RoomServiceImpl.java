@@ -12,6 +12,7 @@ import com.bd2.seniorhomeapp.room.dto.request.RoomRequest;
 import com.bd2.seniorhomeapp.room.dto.request.RoomUpdateRequest;
 import com.bd2.seniorhomeapp.room.entity.GameRoomEquipment;
 import com.bd2.seniorhomeapp.room.entity.Room;
+import com.bd2.seniorhomeapp.room.entity.RoomStandard;
 import com.bd2.seniorhomeapp.room.entity.RoomType;
 import com.bd2.seniorhomeapp.room.repository.RoomRepository;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
@@ -87,7 +88,8 @@ public class RoomServiceImpl implements RoomService {
         boolean inUse = roomUpdateRequest.inUse() != null ? roomUpdateRequest.inUse() : room.getInUse();
         RoomType type = roomUpdateRequest.type() != null ? roomUpdateRequest.type() : room.getType();
         Integer capacity = roomUpdateRequest.capacity() != null ? roomUpdateRequest.capacity() : room.getCapacity();
-        String standard = roomUpdateRequest.standard() != null ? roomUpdateRequest.standard() : room.getStandard();
+        RoomStandard standard = roomUpdateRequest.standard() != null
+                ? roomUpdateRequest.standard() : room.getStandard();
         String officeKind = roomUpdateRequest.officeKind() != null
                 ? roomUpdateRequest.officeKind() : room.getOfficeKind();
         List<GameRoomEquipmentItem> gameEquipment = roomUpdateRequest.gameEquipment() != null
@@ -121,7 +123,7 @@ public class RoomServiceImpl implements RoomService {
             boolean inUse,
             RoomType type,
             Integer capacity,
-            String standard,
+            RoomStandard standard,
             String officeKind,
             List<GameRoomEquipmentItem> gameEquipment) {
         if (inUse && type == null) {
@@ -136,7 +138,7 @@ public class RoomServiceImpl implements RoomService {
                 if (capacity == null || capacity < 1) {
                     throw new RuntimeException("Residential room must have at least one bed");
                 }
-                if (standard == null || standard.isBlank()) {
+                if (standard == null) {
                     throw new RuntimeException("Residential room must have a standard");
                 }
             }
@@ -166,7 +168,7 @@ public class RoomServiceImpl implements RoomService {
             boolean inUse,
             RoomType type,
             Integer capacity,
-            String standard,
+            RoomStandard standard,
             String officeKind,
             String equipmentDescription,
             List<GameRoomEquipmentItem> gameEquipment) {

@@ -95,10 +95,17 @@ public class SeniorServiceImpl implements SeniorService {
 
 	@Override
 	public void delete(Long id) {
-		if (!seniorRepository.existsById(id)) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior not found");
+		Senior senior = seniorRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Senior not found"));
+
+		List<Employee> assignedEmployees = employeeRepository.findBySeniors_SeniorId(id);
+		for (Employee employee : assignedEmployees) {
+			employee.getSeniors().remove(senior);
+			employeeRepository.save(employee);
 		}
-		seniorRepository.deleteById(id);
+
+		senior.setRoom(null);
+		seniorRepository.delete(senior);
 	}
 	private SeniorResponse mapToResponse(Senior senior) {
 		List<Employee> guardians = employeeRepository.findBySeniors_SeniorId(senior.getSeniorId());

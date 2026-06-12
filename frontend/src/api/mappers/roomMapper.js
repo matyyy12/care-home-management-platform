@@ -43,7 +43,7 @@ export function mapRoomToCreateRequest(form) {
     seniorHomeId: Number(form.seniorHomeId),
     type,
     capacity: type === 'RESIDENTIAL' ? Number(form.capacity) : null,
-    standard: type === 'RESIDENTIAL' ? (form.standard ?? '').trim() : null,
+    standard: type === 'RESIDENTIAL' ? form.standard || null : null,
     officeKind: type === 'OFFICE' ? (form.officeKind ?? '').trim() : null,
     equipmentDescription: type === 'OFFICE' ? (form.equipmentDescription ?? '').trim() : null,
     gameEquipment: type === 'GAME_ROOM' ? mapGameEquipmentForRequest(form.gameEquipment) : null,

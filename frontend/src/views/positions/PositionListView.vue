@@ -119,7 +119,13 @@ async function handleDeleteConfirm() {
       :columns="columns"
       :rows="positionList"
       @row-click="openDetail"
-    />
+    >
+      <template #actions="{ row }">
+        <AppButton variant="secondary" size="sm" @click="openDetail(row)">
+          Szczegóły
+        </AppButton>
+      </template>
+    </DataTable>
 
     <AppModal :open="detailOpen" :title="detailRow?.name ?? ''" @close="closeDetail">
       <dl v-if="detailRow && detailStep === 'details'" class="space-y-3 text-sm">

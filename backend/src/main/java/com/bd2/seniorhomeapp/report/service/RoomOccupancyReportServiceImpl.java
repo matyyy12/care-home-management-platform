@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.bd2.seniorhomeapp.report.dto.RoomOccupancyReportRow;
 import com.bd2.seniorhomeapp.room.entity.Room;
+import com.bd2.seniorhomeapp.room.entity.RoomStandard;
 import com.bd2.seniorhomeapp.room.entity.RoomType;
 import com.bd2.seniorhomeapp.room.repository.RoomRepository;
 import com.bd2.seniorhomeapp.senior.entity.SeniorStatus;
@@ -33,8 +34,7 @@ public class RoomOccupancyReportServiceImpl implements RoomOccupancyReportServic
                 .filter(room -> Boolean.TRUE.equals(room.getInUse()))
                 .filter(room -> room.getType() == RoomType.RESIDENTIAL)
                 .filter(room -> floor == null || floor.equals(room.getFloor()))
-                .filter(room -> standard == null || standard.isBlank()
-                        || standard.equalsIgnoreCase(room.getStandard()))
+                .filter(room -> matchesStandard(room.getStandard(), standard))
                 .map(this::mapRow)
                 .sorted(Comparator
                         .comparing(RoomOccupancyReportRow::seniorHome)
@@ -58,5 +58,12 @@ public class RoomOccupancyReportServiceImpl implements RoomOccupancyReportServic
                 assigned,
                 free,
                 room.getStandard());
+    }
+
+    private boolean matchesStandard(RoomStandard roomStandard, String requestedStandard) {
+        if (requestedStandard == null || requestedStandard.isBlank()) {
+            return true;
+        }
+        return roomStandard != null && requestedStandard.equalsIgnoreCase(roomStandard.name());
     }
 }
