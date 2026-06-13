@@ -16,6 +16,7 @@ import com.bd2.seniorhomeapp.room.dto.request.RoomRequest;
 import com.bd2.seniorhomeapp.room.entity.GameRoomEquipment;
 import com.bd2.seniorhomeapp.room.entity.GameRoomEquipmentType;
 import com.bd2.seniorhomeapp.room.entity.Room;
+import com.bd2.seniorhomeapp.room.entity.RoomStandard;
 import com.bd2.seniorhomeapp.room.entity.RoomType;
 import com.bd2.seniorhomeapp.room.service.RoomService;
 import com.bd2.seniorhomeapp.senior.entity.SeniorStatus;
@@ -81,7 +82,7 @@ class RoomControllerTest {
                                   "seniorHomeId": 1,
                                   "type": "RESIDENTIAL",
                                   "capacity": 2,
-                                  "standard": "Podstawowy"
+                                  "standard": "BASIC"
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -95,7 +96,7 @@ class RoomControllerTest {
     @Test
     void updateRoomShouldReturnUpdatedRoomResponse() throws Exception {
         Room room = sampleResidentialRoom(1L);
-        room.setStandard("Podwyższony");
+        room.setStandard(RoomStandard.PREMIUM);
         when(roomService.updateRoom(eq(1L), any())).thenReturn(room);
         when(seniorRepository.countByRoom_IdAndStatus(1L, SeniorStatus.ACTIVE)).thenReturn(0L);
 
@@ -103,11 +104,11 @@ class RoomControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "standard": "Podwyższony"
+                                  "standard": "PREMIUM"
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.standard").value("Podwyższony"));
+                .andExpect(jsonPath("$.standard").value("PREMIUM"));
 
         verify(roomService).updateRoom(eq(1L), any());
     }
@@ -161,7 +162,7 @@ class RoomControllerTest {
         room.setSeniorHome(seniorHome);
         room.setType(RoomType.RESIDENTIAL);
         room.setCapacity(2);
-        room.setStandard("Podstawowy");
+        room.setStandard(RoomStandard.BASIC);
         return room;
     }
 

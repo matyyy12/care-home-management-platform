@@ -1,5 +1,5 @@
 import { onMounted, ref } from 'vue'
-import { fetchPositions, createPosition } from '@/api/positions'
+import { fetchPositions, createPosition, deletePosition, updatePosition } from '@/api/positions'
 import { mapPositionFromApi } from '@/api/mappers/positionMapper'
 
 export function usePositions() {
@@ -36,6 +36,34 @@ export function usePositions() {
     }
   }
 
+  async function editPosition(id, form) {
+    saving.value = true
+    error.value = null
+    try {
+      await updatePosition(id, form)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się zaktualizować stanowiska'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function removePosition(id) {
+    saving.value = true
+    error.value = null
+    try {
+      await deletePosition(id)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć stanowiska'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   onMounted(reload)
 
   return {
@@ -45,5 +73,7 @@ export function usePositions() {
     error,
     reload,
     addPosition,
+    editPosition,
+    removePosition,
   }
 }

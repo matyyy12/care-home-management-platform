@@ -14,8 +14,17 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useSeniorHomes } from '@/composables/useSeniorHomes'
 import { useOwners } from '@/composables/useOwners'
 import { attachOwnersToHomes } from '@/api/mappers/ownerMapper'
+import { downloadSeniorHomeSummaryPdf } from '@/api/reports'
 const { canWrite } = usePermissions('senior-homes')
-const { homeList, loading: homesLoading, saving: homesSaving, error: homesError, addHome } =
+const {
+  homeList,
+  loading: homesLoading,
+  saving: homesSaving,
+  error: homesError,
+  addHome,
+  editHome,
+  removeHome,
+} =
   useSeniorHomes()
 const {
   ownerList,
@@ -24,6 +33,8 @@ const {
   error: ownersError,
   reload: reloadOwners,
   addOwner,
+  editOwner,
+  removeOwner,
 } = useOwners(() => homeList.value)
 
 watch(homeList, () => {
@@ -32,7 +43,8 @@ watch(homeList, () => {
 
 const loading = computed(() => homesLoading.value || ownersLoading.value)
 const saving = computed(() => homesSaving.value || ownersSaving.value)
-const error = computed(() => homesError.value || ownersError.value)
+const pdfError = ref('')
+const error = computed(() => homesError.value || ownersError.value || pdfError.value)
 
 const homeOptions = computed(() =>
   homeList.value.map((home) => ({ value: home.id, label: home.name })),
@@ -84,15 +96,35 @@ const emptyOwnerForm = () => ({
 
 const homeForm = ref(emptyHomeForm())
 const ownerForm = ref(emptyOwnerForm())
-const detailRow = ref(null)
-const detailOpen = computed(() => detailRow.value !== null)
+const homeEditForm = ref(emptyHomeForm())
+const ownerEditForm = ref(emptyOwnerForm())
+const formNotice = ref('')
+const pdfLoadingHomeId = ref(null)
+const homeDetailRow = ref(null)
+const homeDetailStep = ref('details')
+const ownerDetailRow = ref(null)
+const ownerDetailStep = ref('details')
+const homeDetailOpen = computed(() => homeDetailRow.value !== null)
+const ownerDetailOpen = computed(() => ownerDetailRow.value !== null)
 
-function openDetail(row) {
-  detailRow.value = row
+function openHomeDetail(row) {
+  homeDetailRow.value = row
+  homeDetailStep.value = 'details'
 }
 
-function closeDetail() {
-  detailRow.value = null
+function closeHomeDetail() {
+  homeDetailRow.value = null
+  homeDetailStep.value = 'details'
+}
+
+function openOwnerDetail(row) {
+  ownerDetailRow.value = row
+  ownerDetailStep.value = 'details'
+}
+
+function closeOwnerDetail() {
+  ownerDetailRow.value = null
+  ownerDetailStep.value = 'details'
 }
 
 function formatWebsite(url) {
@@ -102,13 +134,140 @@ function formatWebsite(url) {
 }
 
 async function handleHomeSubmit() {
-  await addHome(homeForm.value)
-  homeForm.value = emptyHomeForm()
+  try {
+    await addHome(homeForm.value)
+    formNotice.value = 'Dom seniora zapisany w bazie danych.'
+    homeForm.value = emptyHomeForm()
+  } catch {
+    formNotice.value = ''
+  }
 }
 
 async function handleOwnerSubmit() {
-  await addOwner(ownerForm.value)
-  ownerForm.value = emptyOwnerForm()
+  try {
+    await addOwner(ownerForm.value)
+    formNotice.value = 'Właściciel zapisany w bazie danych.'
+    ownerForm.value = emptyOwnerForm()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+function homeRowToForm(row) {
+  return {
+    name: row.name ?? '',
+    phone: row.phone ?? '',
+    email: row.email ?? '',
+    website: row.website ?? '',
+    foundedAt: row.foundedAt ?? '',
+    city: row.city ?? '',
+    street: row.street ?? '',
+    apartmentNumber: row.apartmentNumber ?? '',
+    postalCode: row.postalCode ?? '',
+    postOfficeCity: row.postOfficeCity ?? row.city ?? '',
+  }
+}
+
+function ownerRowToForm(row) {
+  return {
+    name: row.name ?? '',
+    surname: row.surname ?? '',
+    seniorHomeId: row.seniorHomeId ?? '',
+    city: row.city ?? '',
+    street: row.street ?? '',
+    apartmentNumber: row.apartmentNumber ?? '',
+    postalCode: row.postalCode ?? '',
+    postOfficeCity: row.postOfficeCity ?? row.city ?? '',
+  }
+}
+
+function showHomeEditForm() {
+  if (!homeDetailRow.value) return
+  homeEditForm.value = homeRowToForm(homeDetailRow.value)
+  homeDetailStep.value = 'edit'
+}
+
+function showOwnerEditForm() {
+  if (!ownerDetailRow.value) return
+  ownerEditForm.value = ownerRowToForm(ownerDetailRow.value)
+  ownerDetailStep.value = 'edit'
+}
+
+function showHomeDeleteConfirm() {
+  homeDetailStep.value = 'delete'
+}
+
+function showOwnerDeleteConfirm() {
+  ownerDetailStep.value = 'delete'
+}
+
+async function handleHomeEditSubmit() {
+  if (!homeDetailRow.value) return
+
+  try {
+    await editHome(homeDetailRow.value.id, homeEditForm.value)
+    formNotice.value = 'Dom seniora zaktualizowany.'
+    closeHomeDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleOwnerEditSubmit() {
+  if (!ownerDetailRow.value) return
+
+  try {
+    await editOwner(ownerDetailRow.value.id, ownerEditForm.value)
+    formNotice.value = 'Właściciel zaktualizowany.'
+    closeOwnerDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleHomeDeleteConfirm() {
+  if (!homeDetailRow.value) return
+
+  try {
+    await removeHome(homeDetailRow.value.id)
+    formNotice.value = 'Dom seniora usunięty z bazy danych.'
+    closeHomeDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleOwnerDeleteConfirm() {
+  if (!ownerDetailRow.value) return
+
+  try {
+    await removeOwner(ownerDetailRow.value.id)
+    formNotice.value = 'Właściciel usunięty z bazy danych.'
+    closeOwnerDetail()
+  } catch {
+    formNotice.value = ''
+  }
+}
+
+async function handleDownloadHomePdf() {
+  if (!homeDetailRow.value) return
+
+  pdfLoadingHomeId.value = homeDetailRow.value.id
+  pdfError.value = ''
+  try {
+    const blob = await downloadSeniorHomeSummaryPdf(homeDetailRow.value.id)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `raport-domu-seniora-${homeDetailRow.value.id}.pdf`
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    pdfError.value = e.message ?? 'Nie udało się pobrać raportu PDF'
+    formNotice.value = ''
+  } finally {
+    pdfLoadingHomeId.value = null
+  }
 }
 </script>
 
@@ -120,6 +279,7 @@ async function handleOwnerSubmit() {
     />
 
     <AlertMessage v-if="error" variant="error">{{ error }}</AlertMessage>
+    <AlertMessage v-if="formNotice" variant="success">{{ formNotice }}</AlertMessage>
 
     <ReadOnlyNotice v-if="!canWrite" />
 
@@ -171,8 +331,14 @@ async function handleOwnerSubmit() {
         clickable
         :columns="homeColumns"
         :rows="displayHomes"
-        @row-click="openDetail"
-      />
+        @row-click="openHomeDetail"
+      >
+        <template #actions="{ row }">
+          <AppButton variant="secondary" size="sm" @click="openHomeDetail(row)">
+            Szczegóły
+          </AppButton>
+        </template>
+      </DataTable>
     </section>
 
     <AppCard v-if="canWrite" title="Dodaj właściciela">
@@ -215,51 +381,293 @@ async function handleOwnerSubmit() {
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-slate-900">Lista właścicieli</h2>
       <p v-if="loading" class="text-sm text-slate-500">Ładowanie…</p>
-      <DataTable v-else :columns="ownerColumns" :rows="ownerList" />
+      <DataTable
+        v-else
+        clickable
+        :columns="ownerColumns"
+        :rows="ownerList"
+        @row-click="openOwnerDetail"
+      >
+        <template #actions="{ row }">
+          <AppButton variant="secondary" size="sm" @click="openOwnerDetail(row)">
+            Szczegóły
+          </AppButton>
+        </template>
+      </DataTable>
     </section>
 
-    <AppModal :open="detailOpen" :title="detailRow?.name ?? ''" @close="closeDetail">
-      <dl v-if="detailRow" class="space-y-3 text-sm">
+    <AppModal :open="homeDetailOpen" :title="homeDetailRow?.name ?? ''" @close="closeHomeDetail">
+      <dl v-if="homeDetailRow && homeDetailStep === 'details'" class="space-y-3 text-sm">
         <div>
           <dt class="font-medium text-slate-700">Telefon</dt>
-          <dd class="mt-0.5 text-slate-800">{{ detailRow.phone || '—' }}</dd>
+          <dd class="mt-0.5 text-slate-800">{{ homeDetailRow.phone || '—' }}</dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">E-mail</dt>
-          <dd class="mt-0.5 text-slate-800">{{ detailRow.email || '—' }}</dd>
+          <dd class="mt-0.5 text-slate-800">{{ homeDetailRow.email || '—' }}</dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">Strona WWW</dt>
           <dd class="mt-0.5 text-slate-800">
             <a
-              v-if="formatWebsite(detailRow.website)"
-              :href="formatWebsite(detailRow.website)"
+              v-if="formatWebsite(homeDetailRow.website)"
+              :href="formatWebsite(homeDetailRow.website)"
               target="_blank"
               rel="noopener noreferrer"
               class="text-emerald-700 hover:underline"
             >
-              {{ detailRow.website }}
+              {{ homeDetailRow.website }}
             </a>
             <span v-else>—</span>
           </dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">Data założenia</dt>
-          <dd class="mt-0.5 text-slate-800">{{ detailRow.foundedAt || '—' }}</dd>
+          <dd class="mt-0.5 text-slate-800">{{ homeDetailRow.foundedAt || '—' }}</dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">Adres</dt>
-          <dd class="mt-0.5 text-slate-800">{{ detailRow.addressLabel || '—' }}</dd>
+          <dd class="mt-0.5 text-slate-800">{{ homeDetailRow.addressLabel || '—' }}</dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">Właściciele</dt>
-          <dd class="mt-0.5 text-slate-800">{{ detailRow.owners?.join(', ') || '—' }}</dd>
+          <dd class="mt-0.5 text-slate-800">{{ homeDetailRow.owners?.join(', ') || '—' }}</dd>
         </div>
       </dl>
-      <div class="mt-5">
-        <AppButton class="w-full justify-center" variant="ghost" @click="closeDetail">
-          Zamknij
-        </AppButton>
+
+      <form
+        v-else-if="homeDetailRow && homeDetailStep === 'edit'"
+        class="grid gap-4 sm:grid-cols-2"
+        @submit.prevent="handleHomeEditSubmit"
+      >
+        <FormField label="Nazwa">
+          <AppInput v-model="homeEditForm.name" maxlength="20" />
+        </FormField>
+        <FormField label="Telefon">
+          <AppInput v-model="homeEditForm.phone" type="tel" maxlength="15" />
+        </FormField>
+        <FormField label="E-mail">
+          <AppInput v-model="homeEditForm.email" type="email" maxlength="40" />
+        </FormField>
+        <FormField label="Strona WWW">
+          <AppInput v-model="homeEditForm.website" type="url" maxlength="40" placeholder="https://…" />
+        </FormField>
+        <FormField label="Data założenia">
+          <AppInput v-model="homeEditForm.foundedAt" type="date" />
+        </FormField>
+        <FormField label="Miasto">
+          <AppInput v-model="homeEditForm.city" />
+        </FormField>
+        <FormField label="Ulica">
+          <AppInput v-model="homeEditForm.street" />
+        </FormField>
+        <FormField label="Nr lokalu">
+          <AppInput v-model="homeEditForm.apartmentNumber" />
+        </FormField>
+        <FormField label="Kod pocztowy">
+          <AppInput v-model="homeEditForm.postalCode" placeholder="00-000" />
+        </FormField>
+        <FormField label="Miejscowość poczty">
+          <AppInput v-model="homeEditForm.postOfficeCity" />
+        </FormField>
+      </form>
+
+      <div v-else-if="homeDetailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć dom seniora <strong>{{ homeDetailRow.name }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Usunięcie może zostać zablokowane, jeśli dom ma przypisanych seniorów, pracowników,
+          pomieszczenia albo właścicieli.
+        </p>
+      </div>
+
+      <div class="mt-5 flex flex-wrap gap-2">
+        <template v-if="homeDetailStep === 'details'">
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="secondary"
+            @click="showHomeEditForm"
+          >
+            Modyfikuj
+          </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showHomeDeleteConfirm"
+          >
+            Usuń
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="secondary"
+            :disabled="pdfLoadingHomeId === homeDetailRow?.id"
+            @click="handleDownloadHomePdf"
+          >
+            {{ pdfLoadingHomeId === homeDetailRow?.id ? 'Generowanie…' : 'Pobierz PDF' }}
+          </AppButton>
+          <AppButton class="flex-1 justify-center" variant="ghost" @click="closeHomeDetail">
+            Zamknij
+          </AppButton>
+        </template>
+        <template v-else-if="homeDetailStep === 'edit'">
+          <AppButton class="flex-1 justify-center" :disabled="saving" @click="handleHomeEditSubmit">
+            {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="homeDetailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleHomeDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń dom' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="homeDetailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+      </div>
+    </AppModal>
+
+    <AppModal
+      :open="ownerDetailOpen"
+      :title="ownerDetailRow?.displayName ?? ''"
+      @close="closeOwnerDetail"
+    >
+      <dl v-if="ownerDetailRow && ownerDetailStep === 'details'" class="space-y-3 text-sm">
+        <div>
+          <dt class="font-medium text-slate-700">Imię</dt>
+          <dd class="mt-0.5 text-slate-800">{{ ownerDetailRow.name || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">Nazwisko</dt>
+          <dd class="mt-0.5 text-slate-800">{{ ownerDetailRow.surname || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">Dom seniora</dt>
+          <dd class="mt-0.5 text-slate-800">{{ ownerDetailRow.seniorHome || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-slate-700">Adres</dt>
+          <dd class="mt-0.5 text-slate-800">{{ ownerDetailRow.addressLabel || '—' }}</dd>
+        </div>
+      </dl>
+
+      <form
+        v-else-if="ownerDetailRow && ownerDetailStep === 'edit'"
+        class="grid gap-4 sm:grid-cols-2"
+        @submit.prevent="handleOwnerEditSubmit"
+      >
+        <FormField label="Imię">
+          <AppInput v-model="ownerEditForm.name" maxlength="30" />
+        </FormField>
+        <FormField label="Nazwisko">
+          <AppInput v-model="ownerEditForm.surname" maxlength="30" />
+        </FormField>
+        <FormField label="Dom seniora">
+          <AppSelect v-model="ownerEditForm.seniorHomeId" :options="homeOptions" />
+        </FormField>
+        <FormField label="Miasto">
+          <AppInput v-model="ownerEditForm.city" />
+        </FormField>
+        <FormField label="Ulica">
+          <AppInput v-model="ownerEditForm.street" />
+        </FormField>
+        <FormField label="Nr lokalu">
+          <AppInput v-model="ownerEditForm.apartmentNumber" />
+        </FormField>
+        <FormField label="Kod pocztowy">
+          <AppInput v-model="ownerEditForm.postalCode" placeholder="00-000" />
+        </FormField>
+        <FormField label="Miejscowość poczty">
+          <AppInput v-model="ownerEditForm.postOfficeCity" />
+        </FormField>
+      </form>
+
+      <div v-else-if="ownerDetailRow" class="space-y-3 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć właściciela
+          <strong>{{ ownerDetailRow.displayName }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Jeżeli rekord ma powiązania w bazie, backend może zablokować usunięcie i pokaże powód.
+        </p>
+      </div>
+
+      <div class="mt-5 flex flex-wrap gap-2">
+        <template v-if="ownerDetailStep === 'details'">
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="secondary"
+            @click="showOwnerEditForm"
+          >
+            Modyfikuj
+          </AppButton>
+          <AppButton
+            v-if="canWrite"
+            class="flex-1 justify-center"
+            variant="danger"
+            @click="showOwnerDeleteConfirm"
+          >
+            Usuń
+          </AppButton>
+          <AppButton class="flex-1 justify-center" variant="ghost" @click="closeOwnerDetail">
+            Zamknij
+          </AppButton>
+        </template>
+        <template v-else-if="ownerDetailStep === 'edit'">
+          <AppButton class="flex-1 justify-center" :disabled="saving" @click="handleOwnerEditSubmit">
+            {{ saving ? 'Zapisywanie…' : 'Zapisz zmiany' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="ownerDetailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
+        <template v-else>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="saving"
+            @click="handleOwnerDeleteConfirm"
+          >
+            {{ saving ? 'Usuwanie…' : 'Usuń właściciela' }}
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            type="button"
+            variant="secondary"
+            :disabled="saving"
+            @click="ownerDetailStep = 'details'"
+          >
+            Wróć
+          </AppButton>
+        </template>
       </div>
     </AppModal>
   </div>

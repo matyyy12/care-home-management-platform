@@ -16,7 +16,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { useActivities } from '@/composables/useActivities'
-import { ACTIVITY_TYPES } from '@/constants/enums'
+import { ACTIVITY_TYPE_LABELS, ACTIVITY_TYPES, formatCurrency } from '@/constants/enums'
 
 const { canWrite } = usePermissions('activities')
 const auth = useAuthStore()
@@ -43,16 +43,14 @@ const filterOptions = computed(() => [
   ...scopedHomeSelectOptions(seniorHomes.value),
 ])
 
-const typeLabel = Object.fromEntries(ACTIVITY_TYPES.map((t) => [t.value, t.label]))
-
 const columns = [
   { key: 'name', label: 'Nazwa' },
   {
     key: 'type',
     label: 'Rodzaj',
-    format: (row) => typeLabel[row.type] ?? row.type,
+    format: (row) => ACTIVITY_TYPE_LABELS[row.type] ?? row.type,
   },
-  { key: 'price', label: 'Cena (zł)' },
+  { key: 'price', label: 'Cena', format: (row) => formatCurrency(row.price) },
   { key: 'seniorHome', label: 'Dom seniora' },
   { key: 'participants', label: 'Uczestnicy' },
 ]
@@ -247,13 +245,13 @@ function rowBusy(row) {
           <dt class="font-medium text-slate-700">Rodzaj</dt>
           <dd>
             <AppBadge :variant="typeVariant(detailRow.type)">
-              {{ typeLabel[detailRow.type] ?? detailRow.type }}
+              {{ ACTIVITY_TYPE_LABELS[detailRow.type] ?? detailRow.type }}
             </AppBadge>
           </dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">Cena</dt>
-          <dd class="mt-0.5 text-slate-800">{{ detailRow.price }} zł</dd>
+          <dd class="mt-0.5 text-slate-800">{{ formatCurrency(detailRow.price) }}</dd>
         </div>
         <div>
           <dt class="font-medium text-slate-700">Dom seniora</dt>
@@ -374,7 +372,7 @@ function rowBusy(row) {
         @row-click="openDetail"
       >
         <template #cell-type="{ row }">
-          <AppBadge :variant="typeVariant(row.type)">{{ typeLabel[row.type] }}</AppBadge>
+          <AppBadge :variant="typeVariant(row.type)">{{ ACTIVITY_TYPE_LABELS[row.type] }}</AppBadge>
         </template>
         <template v-if="canWrite" #actions="{ row }">
           <AppButton

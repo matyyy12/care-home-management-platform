@@ -4,10 +4,12 @@ import {
   assignEmployeesToRoom as assignEmployeesToRoomRequest,
   assignSeniorToEmployee as assignSeniorToEmployeeRequest,
   createEmployee,
+  deleteEmployee,
   fetchEmployees,
   setEmployeeSeniors as setEmployeeSeniorsRequest,
   unassignEmployeeFromRoom as unassignEmployeeFromRoomRequest,
   unassignSeniorFromEmployee as unassignSeniorFromEmployeeRequest,
+  updateEmployee,
 } from '@/api/employees'
 import { fetchPositions } from '@/api/positions'
 import { fetchSeniorHomes } from '@/api/seniorHomes'
@@ -90,6 +92,20 @@ export function useEmployees() {
       await reload()
     } catch (e) {
       error.value = e.message ?? 'Nie udało się zapisać pracownika'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function editEmployee(id, form) {
+    saving.value = true
+    error.value = null
+    try {
+      await updateEmployee(id, form)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się zaktualizować pracownika'
       throw e
     } finally {
       saving.value = false
@@ -180,6 +196,20 @@ export function useEmployees() {
     }
   }
 
+  async function removeEmployee(id) {
+    saving.value = true
+    error.value = null
+    try {
+      await deleteEmployee(id)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć pracownika'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   onMounted(reload)
 
   return {
@@ -192,6 +222,8 @@ export function useEmployees() {
     error,
     reload,
     addEmployee,
+    editEmployee,
+    removeEmployee,
     assignEmployeeToRoom,
     assignEmployeesToRoom,
     unassignEmployeeFromRoom,

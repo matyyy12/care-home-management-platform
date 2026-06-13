@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.bd2.seniorhomeapp.report.controller.RoomOccupancyReportController;
 import com.bd2.seniorhomeapp.report.dto.RoomOccupancyReportRow;
 import com.bd2.seniorhomeapp.report.service.RoomOccupancyReportService;
+import com.bd2.seniorhomeapp.room.entity.RoomStandard;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -52,16 +53,16 @@ class RoomOccupancyReportControllerTest {
 
     @Test
     void getReportShouldPassFilters() throws Exception {
-        when(roomOccupancyReportService.generateReport(eq(1L), eq(1), eq("Podstawowy")))
+        when(roomOccupancyReportService.generateReport(eq(1L), eq(1), eq("BASIC")))
                 .thenReturn(List.of());
 
         mockMvc.perform(get("/api/reports/room-occupancy")
                         .param("seniorHomeId", "1")
                         .param("floor", "1")
-                        .param("standard", "Podstawowy"))
+                        .param("standard", "BASIC"))
                 .andExpect(status().isOk());
 
-        verify(roomOccupancyReportService).generateReport(1L, 1, "Podstawowy");
+        verify(roomOccupancyReportService).generateReport(1L, 1, "BASIC");
     }
 
     private static RoomOccupancyReportRow sampleRow() {
@@ -74,6 +75,6 @@ class RoomOccupancyReportControllerTest {
                 2,
                 1,
                 1,
-                "Podstawowy");
+                RoomStandard.BASIC);
     }
 }

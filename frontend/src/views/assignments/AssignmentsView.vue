@@ -4,9 +4,11 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import FormField from '@/components/ui/FormField.vue'
+import AppInput from '@/components/ui/AppInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import AppModal from '@/components/ui/AppModal.vue'
 import AlertMessage from '@/components/ui/AlertMessage.vue'
 import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice.vue'
 import { usePermissions } from '@/composables/usePermissions'
@@ -46,6 +48,13 @@ const formNotice = ref('')
 const seniorRoomForm = ref({ seniorId: '', roomId: '' })
 const caregiverForm = ref({ employeeId: '', seniorId: '' })
 const employeeRoomForm = ref({ roomId: '', employeeIds: [] })
+const unassignConfirm = ref(null)
+const seniorSearch = ref('')
+const roomSearch = ref('')
+const caregiverEmployeeSearch = ref('')
+const caregiverSeniorSearch = ref('')
+const employeeRoomSearch = ref('')
+const employeeRoomEmployeeSearch = ref('')
 
 const error = computed(() => seniorRoomError.value || employeeError.value)
 const loading = computed(() => loadingSeniorRooms.value)
@@ -55,6 +64,12 @@ const tabs = [
   { id: 'caregiver', label: 'Opiekun → senior' },
   { id: 'employee-room', label: 'Pracownik → pomieszczenie' },
 ]
+
+function matchesSearch(option, query) {
+  const normalizedQuery = query.trim().toLowerCase()
+  if (!normalizedQuery) return true
+  return option.label.toLowerCase().includes(normalizedQuery)
+}
 
 const activeSeniors = computed(() =>
   seniorList.value.filter((s) => s.status === 'ACTIVE' && !s.dischargeDate),
@@ -76,11 +91,15 @@ const scopedEmployees = computed(() =>
   filterItems(employeeList.value, { homeIdKey: 'seniorHomeId' }).filter((e) => !e.terminatedAt),
 )
 
-const seniorOptions = computed(() =>
+const allSeniorOptions = computed(() =>
   scopedActiveSeniors.value.map((s) => ({
     value: s.id,
     label: `${s.firstName} ${s.lastName}${s.roomNumber && s.roomNumber !== '—' ? ` (pokój ${s.roomNumber})` : ''}`,
   })),
+)
+
+const seniorOptions = computed(() =>
+  allSeniorOptions.value.filter((option) => matchesSearch(option, seniorSearch.value)),
 )
 
 const selectedSenior = computed(() =>
@@ -97,14 +116,20 @@ const roomOptionsForSeniorForm = computed(() => {
   return rooms.map((r) => ({
     value: r.id,
     label: `${r.number} — ${r.seniorHome} (${r.assignedSeniors ?? 0}/${r.capacity} miejsc)`,
-  }))
+  })).filter((option) => matchesSearch(option, roomSearch.value))
 })
 
-const employeeOptionsForCaregiverForm = computed(() =>
+const allEmployeeOptionsForCaregiverForm = computed(() =>
   scopedEmployees.value.map((e) => ({
     value: e.id,
     label: `${e.firstName} ${e.lastName} — ${e.position}`,
   })),
+)
+
+const employeeOptionsForCaregiverForm = computed(() =>
+  allEmployeeOptionsForCaregiverForm.value.filter((option) =>
+    matchesSearch(option, caregiverEmployeeSearch.value),
+  ),
 )
 
 const seniorOptionsForCaregiverForm = computed(() => {
@@ -119,6 +144,7 @@ const seniorOptionsForCaregiverForm = computed(() => {
       value: s.id,
       label: `${s.firstName} ${s.lastName}`,
     }))
+    .filter((option) => matchesSearch(option, caregiverSeniorSearch.value))
 })
 
 const scopedInUseRooms = computed(() =>
@@ -132,7 +158,7 @@ const roomOptionsForEmployeeForm = computed(() =>
   scopedInUseRooms.value.map((r) => ({
     value: r.id,
     label: `${r.number} — ${r.seniorHome}`,
-  })),
+  })).filter((option) => matchesSearch(option, employeeRoomSearch.value)),
 )
 
 const selectedEmployeeRoom = computed(() =>
@@ -151,6 +177,7 @@ const employeeOptionsForRoomForm = computed(() => {
       value: e.id,
       label: `${e.firstName} ${e.lastName} — ${e.position}`,
     }))
+    .filter((option) => matchesSearch(option, employeeRoomEmployeeSearch.value))
 })
 
 const seniorRoomRows = computed(() =>
@@ -216,6 +243,7 @@ watch(
   () => seniorRoomForm.value.seniorId,
   () => {
     seniorRoomForm.value.roomId = ''
+    roomSearch.value = ''
   },
 )
 
@@ -223,6 +251,7 @@ watch(
   () => caregiverForm.value.employeeId,
   () => {
     caregiverForm.value.seniorId = ''
+    caregiverSeniorSearch.value = ''
   },
 )
 
@@ -230,6 +259,7 @@ watch(
   () => employeeRoomForm.value.roomId,
   () => {
     employeeRoomForm.value.employeeIds = []
+    employeeRoomEmployeeSearch.value = ''
   },
 )
 
@@ -248,6 +278,8 @@ async function handleSeniorRoomAssign() {
     await refreshAll()
     formNotice.value = 'Senior przypisany do pokoju.'
     seniorRoomForm.value = { seniorId: '', roomId: '' }
+    seniorSearch.value = ''
+    roomSearch.value = ''
   } catch {
     formNotice.value = ''
   }
@@ -263,12 +295,33 @@ async function handleSeniorRoomUnassign(row) {
   }
 }
 
+function requestUnassign(kind, row) {
+  unassignConfirm.value = { kind, row }
+}
+
+function closeUnassignConfirm() {
+  unassignConfirm.value = null
+}
+
+async function confirmUnassign() {
+  const target = unassignConfirm.value
+  if (!target) return
+
+  const { kind, row } = target
+  if (kind === 'senior-room') await handleSeniorRoomUnassign(row)
+  if (kind === 'caregiver') await handleCaregiverUnassign(row)
+  if (kind === 'employee-room') await handleEmployeeRoomUnassign(row)
+  closeUnassignConfirm()
+}
+
 async function handleCaregiverAssign() {
   try {
     await assignSeniorToEmployee(caregiverForm.value.employeeId, caregiverForm.value.seniorId)
     await refreshAll()
     formNotice.value = 'Opiekun przypisany do seniora.'
     caregiverForm.value = { employeeId: '', seniorId: '' }
+    caregiverEmployeeSearch.value = ''
+    caregiverSeniorSearch.value = ''
   } catch {
     formNotice.value = ''
   }
@@ -290,6 +343,8 @@ async function handleEmployeeRoomAssign() {
     await refreshAll()
     formNotice.value = 'Pracownicy przypisani do pomieszczenia.'
     employeeRoomForm.value = { roomId: '', employeeIds: [] }
+    employeeRoomSearch.value = ''
+    employeeRoomEmployeeSearch.value = ''
   } catch {
     formNotice.value = ''
   }
@@ -345,15 +400,39 @@ async function handleEmployeeRoomUnassign(row) {
       <AppCard v-if="canWrite" title="Przypisz seniora do pokoju">
         <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleSeniorRoomAssign">
           <FormField label="Senior" required>
+            <div class="space-y-2">
+              <AppInput
+                v-model="seniorSearch"
+                type="search"
+                placeholder="Szukaj seniora po imieniu lub nazwisku"
+              />
             <AppSelect v-model="seniorRoomForm.seniorId" :options="seniorOptions" required />
+            </div>
           </FormField>
-          <FormField label="Pokój mieszkalny" required>
+          <FormField label="Pokój mieszkalny z domu seniora" required>
+            <div class="space-y-2">
+              <AppInput
+                v-model="roomSearch"
+                type="search"
+                placeholder="Szukaj numeru pokoju"
+                :disabled="!seniorRoomForm.seniorId"
+              />
             <AppSelect
               v-model="seniorRoomForm.roomId"
               :options="roomOptionsForSeniorForm"
               :disabled="!seniorRoomForm.seniorId"
               required
             />
+              <p v-if="selectedSenior" class="text-xs text-slate-500">
+                Pokazuję tylko pokoje mieszkalne z domu: {{ selectedSenior.seniorHome }}.
+              </p>
+              <p
+                v-else-if="seniorRoomForm.seniorId === ''"
+                class="text-xs text-slate-500"
+              >
+                Najpierw wybierz seniora, wtedy lista pokoi zawęzi się do jego domu.
+              </p>
+            </div>
           </FormField>
           <div class="sm:col-span-2">
             <AppButton type="submit" :disabled="savingSeniorRoom || loading">
@@ -375,7 +454,7 @@ async function handleEmployeeRoomUnassign(row) {
               size="sm"
               :loading="deletingSeniorId === row.seniorId"
               :disabled="deletingSeniorId === row.seniorId"
-              @click="handleSeniorRoomUnassign(row)"
+              @click="requestUnassign('senior-room', row)"
             >
               Usuń
             </AppButton>
@@ -388,15 +467,34 @@ async function handleEmployeeRoomUnassign(row) {
       <AppCard v-if="canWrite" title="Przypisz opiekuna do seniora">
         <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="handleCaregiverAssign">
           <FormField label="Pracownik (opiekun)" required>
+            <div class="space-y-2">
+              <AppInput
+                v-model="caregiverEmployeeSearch"
+                type="search"
+                placeholder="Szukaj pracownika"
+              />
             <AppSelect v-model="caregiverForm.employeeId" :options="employeeOptionsForCaregiverForm" required />
+            </div>
           </FormField>
-          <FormField label="Senior" required>
+          <FormField label="Senior z tego samego domu" required>
+            <div class="space-y-2">
+              <AppInput
+                v-model="caregiverSeniorSearch"
+                type="search"
+                placeholder="Szukaj seniora"
+                :disabled="!caregiverForm.employeeId"
+              />
             <AppSelect
               v-model="caregiverForm.seniorId"
               :options="seniorOptionsForCaregiverForm"
               :disabled="!caregiverForm.employeeId"
               required
             />
+              <p class="text-xs text-slate-500">
+                Po wyborze pracownika lista seniorów pokazuje tylko osoby z jego domu, które nie są
+                jeszcze przypisane do tego opiekuna.
+              </p>
+            </div>
           </FormField>
           <div class="sm:col-span-2">
             <AppButton
@@ -415,7 +513,12 @@ async function handleEmployeeRoomUnassign(row) {
             <AppBadge variant="neutral">{{ row.label }}</AppBadge>
           </template>
           <template v-if="canWrite" #actions="{ row }">
-            <AppButton variant="danger" size="sm" :disabled="assigningEmployee" @click="handleCaregiverUnassign(row)">
+            <AppButton
+              variant="danger"
+              size="sm"
+              :disabled="assigningEmployee"
+              @click="requestUnassign('caregiver', row)"
+            >
               Usuń
             </AppButton>
           </template>
@@ -427,10 +530,23 @@ async function handleEmployeeRoomUnassign(row) {
       <AppCard v-if="canWrite" title="Przypisz pracownika do pomieszczenia">
         <form class="space-y-4" @submit.prevent="handleEmployeeRoomAssign">
           <FormField label="Pomieszczenie" required>
-            <AppSelect v-model="employeeRoomForm.roomId" :options="roomOptionsForEmployeeForm" required />
+            <div class="space-y-2">
+              <AppInput
+                v-model="employeeRoomSearch"
+                type="search"
+                placeholder="Szukaj pomieszczenia"
+              />
+              <AppSelect v-model="employeeRoomForm.roomId" :options="roomOptionsForEmployeeForm" required />
+            </div>
           </FormField>
           <div class="space-y-2">
             <p class="text-sm font-medium text-slate-700">Pracownicy</p>
+            <AppInput
+              v-model="employeeRoomEmployeeSearch"
+              type="search"
+              placeholder="Szukaj pracownika z domu pomieszczenia"
+              :disabled="!employeeRoomForm.roomId"
+            />
             <div
               v-if="employeeOptionsForRoomForm.length > 0"
               class="max-h-64 space-y-2 overflow-auto rounded-lg border border-slate-200 p-3"
@@ -453,7 +569,7 @@ async function handleEmployeeRoomUnassign(row) {
             <p v-else class="text-sm text-slate-500">
               {{
                 employeeRoomForm.roomId
-                  ? 'Brak pracowników z tego domu do przypisania.'
+                  ? 'Brak pracowników z tego domu pasujących do wyszukiwania albo dostępnych do przypisania.'
                   : 'Najpierw wybierz pomieszczenie.'
               }}
             </p>
@@ -477,12 +593,54 @@ async function handleEmployeeRoomUnassign(row) {
             <AppBadge variant="neutral">{{ row.label }}</AppBadge>
           </template>
           <template v-if="canWrite" #actions="{ row }">
-            <AppButton variant="danger" size="sm" :disabled="assigningEmployee" @click="handleEmployeeRoomUnassign(row)">
+            <AppButton
+              variant="danger"
+              size="sm"
+              :disabled="assigningEmployee"
+              @click="requestUnassign('employee-room', row)"
+            >
               Usuń
             </AppButton>
           </template>
         </DataTable>
       </AppCard>
     </template>
+
+    <AppModal
+      :open="unassignConfirm !== null"
+      title="Usuń przypisanie"
+      @close="closeUnassignConfirm"
+    >
+      <div v-if="unassignConfirm" class="space-y-4 text-sm">
+        <p class="text-slate-800">
+          Czy na pewno chcesz usunąć przypisanie
+          <strong>{{ unassignConfirm.row.from }}</strong>
+          →
+          <strong>{{ unassignConfirm.row.to }}</strong>?
+        </p>
+        <p class="text-slate-500">
+          Relację będzie można utworzyć ponownie, ale ta operacja od razu zmieni listę aktywnych
+          przypisań.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <AppButton
+            class="flex-1 justify-center"
+            variant="danger"
+            :disabled="savingSeniorRoom || assigningEmployee"
+            @click="confirmUnassign"
+          >
+            Usuń przypisanie
+          </AppButton>
+          <AppButton
+            class="flex-1 justify-center"
+            variant="secondary"
+            :disabled="savingSeniorRoom || assigningEmployee"
+            @click="closeUnassignConfirm"
+          >
+            Wróć
+          </AppButton>
+        </div>
+      </div>
+    </AppModal>
   </div>
 </template>

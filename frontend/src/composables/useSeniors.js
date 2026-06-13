@@ -1,5 +1,5 @@
 import { computed, onMounted, ref } from 'vue'
-import { fetchSeniors, createSenior } from '@/api/seniors'
+import { fetchSeniors, createSenior, deleteSenior, updateSenior } from '@/api/seniors'
 import { fetchSeniorHomes } from '@/api/seniorHomes'
 import { mapSeniorHomeFromApi } from '@/api/mappers/seniorHomeMapper'
 import { buildHomeNameMap, mapSeniorFromApi } from '@/api/mappers/seniorMapper'
@@ -55,6 +55,34 @@ export function useSeniors() {
     }
   }
 
+  async function editSenior(id, form) {
+    saving.value = true
+    error.value = null
+    try {
+      await updateSenior(id, form)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się zaktualizować seniora'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function removeSenior(id) {
+    saving.value = true
+    error.value = null
+    try {
+      await deleteSenior(id)
+      await reload()
+    } catch (e) {
+      error.value = e.message ?? 'Nie udało się usunąć seniora'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   onMounted(reload)
 
   return {
@@ -66,5 +94,7 @@ export function useSeniors() {
     error,
     reload,
     addSenior,
+    editSenior,
+    removeSenior,
   }
 }

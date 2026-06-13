@@ -12,6 +12,7 @@ import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { useRoomOccupancyReport } from '@/composables/useRoomOccupancyReport'
 import { useRooms } from '@/composables/useRooms'
+import { ROOM_STANDARD_LABELS, ROOM_STANDARDS } from '@/constants/enums'
 const auth = useAuthStore()
 const { filterItems, scopedHomeSelectOptions } = useHomeScope()
 const { rows, loading, error, reload } = useRoomOccupancyReport()
@@ -44,7 +45,11 @@ const columns = [
   { key: 'capacity', label: 'Miejsca' },
   { key: 'assigned', label: 'Przypisani' },
   { key: 'free', label: 'Wolne' },
-  { key: 'standard', label: 'Standard' },
+  {
+    key: 'standard',
+    label: 'Standard',
+    format: (row) => ROOM_STANDARD_LABELS[row.standard] ?? row.standard ?? '—',
+  },
 ]
 
 const filteredRows = computed(() => filterItems(rows.value, { homeIdKey: 'seniorHomeId' }))
@@ -53,7 +58,7 @@ function applyFilters() {
   const filters = {}
   if (homeFilterId.value) filters.seniorHomeId = homeFilterId.value
   if (floorFilter.value !== '') filters.floor = Number(floorFilter.value)
-  if (standardFilter.value.trim()) filters.standard = standardFilter.value.trim()
+  if (standardFilter.value) filters.standard = standardFilter.value
   reload(filters)
 }
 </script>
@@ -80,7 +85,10 @@ function applyFilters() {
           <AppInput v-model="floorFilter" type="number" placeholder="np. 1" />
         </FormField>
         <FormField label="Standard">
-          <AppInput v-model="standardFilter" placeholder="np. Podstawowy" />
+          <AppSelect
+            v-model="standardFilter"
+            :options="[{ value: '', label: 'Wszystkie standardy' }, ...ROOM_STANDARDS]"
+          />
         </FormField>
         <div class="sm:col-span-3">
           <AppButton type="submit" :disabled="loading">

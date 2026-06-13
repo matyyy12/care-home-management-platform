@@ -16,7 +16,12 @@ import { useHomeScope } from '@/composables/useHomeScope'
 import { useAuthStore } from '@/stores/auth'
 import { emptyRoomForm, useRooms } from '@/composables/useRooms'
 import { useSeniors } from '@/composables/useSeniors'
-import { GAME_ROOM_EQUIPMENT_TYPES, ROOM_TYPES } from '@/constants/enums'
+import {
+  GAME_ROOM_EQUIPMENT_TYPES,
+  ROOM_STANDARD_LABELS,
+  ROOM_STANDARDS,
+  ROOM_TYPES,
+} from '@/constants/enums'
 
 const { canWrite } = usePermissions('rooms')
 const auth = useAuthStore()
@@ -108,7 +113,9 @@ watch(
 
 function formatDetails(row) {
   if (row.type === 'RESIDENTIAL') {
-    return `${row.assignedSeniors}/${row.capacity} miejsc, ${row.standard || '—'}`
+    return `${row.assignedSeniors}/${row.capacity} miejsc, ${
+      ROOM_STANDARD_LABELS[row.standard] ?? row.standard ?? '—'
+    }`
   }
   if (row.type === 'OFFICE') {
     return row.officeKind || '—'
@@ -270,7 +277,7 @@ function rowBusy(row) {
             <AppInput v-model="form.capacity" type="number" min="1" required />
           </FormField>
           <FormField label="Standard" required>
-            <AppInput v-model="form.standard" required />
+            <AppSelect v-model="form.standard" :options="ROOM_STANDARDS" required />
           </FormField>
         </template>
 
@@ -437,7 +444,7 @@ function rowBusy(row) {
             <AppInput v-model="editForm.capacity" type="number" min="1" required />
           </FormField>
           <FormField label="Standard" required>
-            <AppInput v-model="editForm.standard" required />
+            <AppSelect v-model="editForm.standard" :options="ROOM_STANDARDS" required />
           </FormField>
         </template>
 

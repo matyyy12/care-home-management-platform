@@ -3,6 +3,7 @@ package com.bd2.seniorhomeapp.room.dto.request;
 import java.util.List;
 
 import com.bd2.seniorhomeapp.room.dto.GameRoomEquipmentItem;
+import com.bd2.seniorhomeapp.room.entity.RoomStandard;
 import com.bd2.seniorhomeapp.room.entity.RoomType;
 
 import jakarta.validation.Valid;
@@ -30,8 +31,7 @@ public record RoomRequest(
         @Min(1)
         Integer capacity,
 
-        @Size(max = 50)
-        String standard,
+        RoomStandard standard,
 
         @Size(max = 100)
         String officeKind,

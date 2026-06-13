@@ -4,19 +4,17 @@ import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public record UpdateSeniorRequest(
-		@NotBlank String firstName,
-		@NotBlank String lastName,
-		@NotNull LocalDate birthDate,
-		@NotBlank String pesel,
-		@NotNull List<String> diseases,
-		@NotBlank String gender,
-		@NotNull LocalDate accommodationDate,
+		String firstName,
+		String lastName,
+		LocalDate birthDate,
+		String pesel,
+		List<String> diseases,
+		String gender,
+		LocalDate accommodationDate,
 		LocalDate dischargeDate,
-		@NotNull Long seniorHomeId) {
+		Long seniorHomeId) {
 
 	@AssertTrue(message = "Discharge date cannot be before birth date or accommodation date")
 	public boolean isDischargeDateValid() {

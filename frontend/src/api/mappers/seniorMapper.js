@@ -22,6 +22,22 @@ export function mapSeniorToCreateRequest(form) {
   }
 }
 
+export function mapSeniorToUpdateRequest(form) {
+  const payload = {}
+
+  if (form.firstName?.trim()) payload.firstName = form.firstName.trim()
+  if (form.lastName?.trim()) payload.lastName = form.lastName.trim()
+  if (form.birthDate) payload.birthDate = form.birthDate
+  if (form.pesel?.trim()) payload.pesel = form.pesel.trim()
+  if (form.gender) payload.gender = form.gender
+  if (form.accommodationDate) payload.accommodationDate = form.accommodationDate
+  if (form.dischargeDate) payload.dischargeDate = form.dischargeDate
+  if (form.seniorHomeId) payload.seniorHomeId = Number(form.seniorHomeId)
+  if (form.diseases != null) payload.diseases = parseDiseases(form.diseases)
+
+  return payload
+}
+
 export function mapSeniorFromApi(dto, homeNameById = new Map()) {
   return {
     id: dto.seniorId,

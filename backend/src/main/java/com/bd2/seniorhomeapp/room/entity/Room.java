@@ -7,6 +7,7 @@ import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -67,9 +68,9 @@ public class Room {
     @Min(1)
     private Integer capacity;
 
-    @Size(max = 50)
-    @Column(length = 50)
-    private String standard;
+    @Convert(converter = RoomStandardConverter.class)
+    @Column(length = 20)
+    private RoomStandard standard;
 
     @Size(max = 100)
     @Column(name = "office_kind", length = 100)

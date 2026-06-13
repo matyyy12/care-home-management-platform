@@ -1,5 +1,7 @@
 package com.bd2.seniorhomeapp.report.dto;
 
+import com.bd2.seniorhomeapp.room.entity.RoomStandard;
+
 public record RoomOccupancyReportRow(
         Long roomId,
         String roomNumber,
@@ -9,6 +11,6 @@ public record RoomOccupancyReportRow(
         Integer capacity,
         int assigned,
         int free,
-        String standard
+        RoomStandard standard
 ) {
 }

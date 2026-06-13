@@ -16,7 +16,7 @@ export function mapOwnerFromApi(dto, homeNameById = new Map()) {
     street: dto.street,
     apartmentNumber: dto.number,
     postalCode: dto.postalCode ?? '',
-    postOfficeCity: '',
+    postOfficeCity: dto.postOfficeCity ?? dto.city ?? '',
     addressLabel: formatAddressLabel(dto),
   }
 }

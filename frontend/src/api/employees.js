@@ -1,5 +1,5 @@
 import { apiDelete, apiGet, apiPatch, apiPost } from '@/api/request'
-import { mapEmployeeToCreateRequest } from '@/api/mappers/employeeMapper'
+import { mapEmployeeToCreateRequest, mapEmployeeToUpdateRequest } from '@/api/mappers/employeeMapper'
 
 export async function fetchEmployees(params = {}) {
   const query = new URLSearchParams()
@@ -10,6 +10,10 @@ export async function fetchEmployees(params = {}) {
 
 export async function createEmployee(form) {
   return apiPost('/api/employees', mapEmployeeToCreateRequest(form))
+}
+
+export async function updateEmployee(id, form) {
+  return apiPatch(`/api/employees/${id}`, mapEmployeeToUpdateRequest(form))
 }
 
 export async function assignEmployeeToRoom(employeeId, roomId) {

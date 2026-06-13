@@ -34,11 +34,17 @@ public class SeniorController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(created);
 	}
 
-	@PutMapping("/{id}")
+	@PatchMapping("/{id}")
 	public ResponseEntity<?> update(
 			@PathVariable Long id,
 			@Valid @RequestBody UpdateSeniorRequest request) {
 		SeniorResponse seniorResponse = seniorService.update(id, request);
 		return ResponseEntity.status(HttpStatus.OK).body(seniorResponse);
+	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> delete(@PathVariable Long id) {
+		seniorService.delete(id);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}
 }
