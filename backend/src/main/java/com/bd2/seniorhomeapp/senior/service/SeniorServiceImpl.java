@@ -53,7 +53,7 @@ public class SeniorServiceImpl implements SeniorService {
 				request.dischargeDate(),
 				findSeniorHome(request.seniorHomeId()));
 
-		return mapToResponse(seniorRepository.save(senior));
+		return SeniorResponse.from(seniorRepository.save(senior));
 	}
 
 	@Override
@@ -107,6 +107,7 @@ public class SeniorServiceImpl implements SeniorService {
 		senior.setRoom(null);
 		seniorRepository.delete(senior);
 	}
+
 	private SeniorResponse mapToResponse(Senior senior) {
 		List<Employee> guardians = employeeRepository.findBySeniors_SeniorId(senior.getSeniorId());
 		List<Long> guardianIds = guardians.stream().map(Employee::getId).toList();
