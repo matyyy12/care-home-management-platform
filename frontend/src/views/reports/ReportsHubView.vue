@@ -32,6 +32,18 @@ const allReports = [
     title: 'Jakość danych',
     description: 'Braki i niespójności w ewidencji.',
   },
+  {
+    routeName: 'report-room-utilization',
+    to: '/raporty/wykorzystanie-pomieszczen',
+    title: 'Wykorzystanie pomieszczeń',
+    description: 'Seniorzy, pracownicy i zajęcia przypisane do pomieszczeń.',
+  },
+  {
+    routeName: 'report-medical-activity',
+    to: '/raporty/zajecia-medyczne',
+    title: 'Zajęcia medyczne',
+    description: 'Problemy w konfiguracji zajęć medycznych.',
+  },
 ]
 
 const reports = computed(() => allReports.filter((r) => auth.canRead(r.routeName)))

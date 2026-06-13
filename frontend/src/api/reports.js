@@ -47,3 +47,25 @@ export async function fetchDataQualityReport(params = {}) {
   const qs = query.toString()
   return apiGet(`/api/reports/data-quality${qs ? `?${qs}` : ''}`)
 }
+
+export async function fetchRoomUtilizationReport(params = {}) {
+  const query = new URLSearchParams()
+  if (params.seniorHomeId != null && params.seniorHomeId !== '') {
+    query.set('seniorHomeId', String(params.seniorHomeId))
+  }
+  if (params.inUse != null && params.inUse !== '') {
+    query.set('inUse', String(params.inUse))
+  }
+  if (params.type?.trim()) query.set('type', params.type.trim())
+  const qs = query.toString()
+  return apiGet(`/api/reports/room-utilization${qs ? `?${qs}` : ''}`)
+}
+
+export async function fetchMedicalActivityReport(params = {}) {
+  const query = new URLSearchParams()
+  if (params.seniorHomeId != null && params.seniorHomeId !== '') {
+    query.set('seniorHomeId', String(params.seniorHomeId))
+  }
+  const qs = query.toString()
+  return apiGet(`/api/reports/medical-activities${qs ? `?${qs}` : ''}`)
+}

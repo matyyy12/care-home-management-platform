@@ -67,3 +67,34 @@ export function mapDataQualityIssueFromApi(dto) {
     suggestedAction: dto.suggestedAction,
   }
 }
+
+export function mapRoomUtilizationFromApi(dto, homeNameById = new Map()) {
+  return {
+    id: dto.roomId,
+    roomId: dto.roomId,
+    roomNumber: dto.roomNumber,
+    floor: dto.floor,
+    seniorHome: dto.seniorHome ?? homeNameById.get(dto.seniorHomeId) ?? '—',
+    seniorHomeId: dto.seniorHomeId,
+    inUse: dto.inUse,
+    type: dto.type,
+    seniorCount: dto.seniorCount ?? 0,
+    employeeCount: dto.employeeCount ?? 0,
+    activityCount: dto.activityCount ?? 0,
+    inUseWithoutType: Boolean(dto.inUseWithoutType),
+    hasWarning: Boolean(dto.hasWarning),
+    warningMessage: dto.warningMessage ?? '',
+  }
+}
+
+export function mapMedicalActivityFromApi(dto) {
+  return {
+    id: `${dto.activityId}-${dto.issueType}-${dto.description}`,
+    activityId: dto.activityId,
+    activityName: dto.activityName,
+    seniorHomeId: dto.seniorHomeId,
+    seniorHome: dto.seniorHome,
+    issueType: dto.issueType,
+    description: dto.description,
+  }
+}

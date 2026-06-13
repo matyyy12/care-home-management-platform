@@ -1,7 +1,11 @@
 package com.bd2.seniorhomeapp.activity.entity;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
+import com.bd2.seniorhomeapp.employee.entity.Employee;
+import com.bd2.seniorhomeapp.room.entity.Room;
 import com.bd2.seniorhomeapp.seniorHome.entity.SeniorHome;
 
 import jakarta.persistence.Column;
@@ -13,6 +17,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
@@ -58,4 +64,14 @@ public class Activity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "senior_home_id", nullable = false)
     private SeniorHome seniorHome;
+
+    @ManyToMany(mappedBy = "activities")
+    private Set<Employee> employees = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "activity_room",
+            joinColumns = @JoinColumn(name = "activity_id"),
+            inverseJoinColumns = @JoinColumn(name = "room_id"))
+    private Set<Room> rooms = new HashSet<>();
 }
