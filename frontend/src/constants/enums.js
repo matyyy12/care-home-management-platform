@@ -20,6 +20,10 @@ export const ROOM_STANDARD_LABELS = Object.fromEntries(
   ROOM_STANDARDS.map((option) => [option.value, option.label]),
 )
 
+export const ROOM_TYPE_LABELS = Object.fromEntries(
+  ROOM_TYPES.map((option) => [option.value, option.label]),
+)
+
 export const GAME_ROOM_EQUIPMENT_TYPES = [
   { value: 'TV', label: 'Telewizor' },
   { value: 'RADIO', label: 'Radio' },

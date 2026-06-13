@@ -34,6 +34,16 @@ export const navigationGroups = [
         routeName: 'report-employee-workload',
       },
       { to: '/raporty/jakosc-danych', label: 'Jakość danych', routeName: 'report-data-quality' },
+      {
+        to: '/raporty/wykorzystanie-pomieszczen',
+        label: 'Wykorzystanie pomieszczeń',
+        routeName: 'report-room-utilization',
+      },
+      {
+        to: '/raporty/zajecia-medyczne',
+        label: 'Zajęcia medyczne',
+        routeName: 'report-medical-activity',
+      },
     ],
   },
   {

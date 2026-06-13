@@ -41,6 +41,8 @@ export const ROUTE_READ_ACCESS = {
   'report-senior-activity': [ROLES.DIRECTOR, ROLES.MANAGER, ROLES.MEDICAL],
   'report-employee-workload': [ROLES.DIRECTOR, ROLES.MANAGER],
   'report-data-quality': [ROLES.DIRECTOR],
+  'report-room-utilization': [ROLES.DIRECTOR, ROLES.MANAGER],
+  'report-medical-activity': [ROLES.DIRECTOR, ROLES.MANAGER, ROLES.MEDICAL],
   administration: [ROLES.DIRECTOR, ROLES.ADMIN_TECH],
   forbidden: Object.values(ROLES),
 }

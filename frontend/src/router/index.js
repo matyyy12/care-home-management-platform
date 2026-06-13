@@ -91,6 +91,16 @@ const router = createRouter({
           component: () => import('@/views/reports/DataQualityReportView.vue'),
         },
         {
+          path: 'raporty/wykorzystanie-pomieszczen',
+          name: 'report-room-utilization',
+          component: () => import('@/views/reports/RoomUtilizationReportView.vue'),
+        },
+        {
+          path: 'raporty/zajecia-medyczne',
+          name: 'report-medical-activity',
+          component: () => import('@/views/reports/MedicalActivityReportView.vue'),
+        },
+        {
           path: 'administracja',
           name: 'administration',
           component: () => import('@/views/administration/AdministrationView.vue'),
