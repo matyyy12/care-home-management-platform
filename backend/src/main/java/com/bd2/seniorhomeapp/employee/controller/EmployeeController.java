@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @GetMapping
+    @PreAuthorize("@authz.canRead(T(com.bd2.seniorhomeapp.security.AppModule).EMPLOYEES)")
     public ResponseEntity<?> getEmployees(@RequestParam(required = false) Long id) {
         List<EmployeeResponse> response = employeeService.getEmployees(id)
                 .stream().map(this::mapToResponse).toList();
@@ -31,12 +33,14 @@ public class EmployeeController {
     }
 
     @PostMapping
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).EMPLOYEES)")
     public ResponseEntity<?> createEmployee(@Valid @RequestBody EmployeeRequest employeeRequest) {
         Employee employee = employeeService.createEmployee(employeeRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(employee));
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).EMPLOYEES)")
     public ResponseEntity<?> updateEmployee(@Valid @RequestBody EmployeeUpdateRequest employeeUpdateRequest,
                                             @PathVariable Long id) {
         Employee employee = employeeService.updateEmployee(employeeUpdateRequest, id);
@@ -44,6 +48,7 @@ public class EmployeeController {
     }
 
     @PatchMapping("/{employeeId}/rooms/{roomId}")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).ASSIGNMENTS)")
     public ResponseEntity<?> assignEmployeeToRoom(@PathVariable Long employeeId,
                                                   @PathVariable Long roomId) {
         Employee employee = employeeService.assignEmployeeToRoom(employeeId, roomId);
@@ -51,6 +56,7 @@ public class EmployeeController {
     }
 
     @PatchMapping("/rooms/{roomId}")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).ASSIGNMENTS)")
     public ResponseEntity<?> assignEmployeesToRoom(@Valid @RequestBody EmployeeRoomAssignmentRequest request,
                                                    @PathVariable Long roomId) {
         List<EmployeeResponse> response = employeeService.assignEmployeesToRoom(request.employeeIds(), roomId)
@@ -59,13 +65,15 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{employeeId}/rooms/{roomId}")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).ASSIGNMENTS)")
     public ResponseEntity<?> unassignEmployeeFromRoom(@PathVariable Long employeeId,
-                                                    @PathVariable Long roomId) {
+                                                      @PathVariable Long roomId) {
         Employee employee = employeeService.unassignEmployeeFromRoom(employeeId, roomId);
         return ResponseEntity.status(HttpStatus.OK).body(mapToResponse(employee));
     }
 
     @PatchMapping("/{employeeId}/seniors/{seniorId}")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).ASSIGNMENTS)")
     public ResponseEntity<?> assignSeniorToEmployee(@PathVariable Long employeeId,
                                                     @PathVariable Long seniorId) {
         Employee employee = employeeService.assignSeniorToEmployee(employeeId, seniorId);
@@ -73,6 +81,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{employeeId}/seniors/{seniorId}")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).ASSIGNMENTS)")
     public ResponseEntity<?> unassignSeniorFromEmployee(@PathVariable Long employeeId,
                                                         @PathVariable Long seniorId) {
         Employee employee = employeeService.unassignSeniorFromEmployee(employeeId, seniorId);
@@ -80,6 +89,7 @@ public class EmployeeController {
     }
 
     @PatchMapping("/{employeeId}/seniors")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).ASSIGNMENTS)")
     public ResponseEntity<?> setEmployeeSeniors(@PathVariable Long employeeId,
                                                 @Valid @RequestBody EmployeeSeniorAssignmentRequest request) {
         Employee employee = employeeService.setEmployeeSeniors(employeeId, request.seniorIds());
@@ -87,6 +97,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).EMPLOYEES)")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

@@ -117,6 +117,6 @@ class SeniorControllerTest {
 	}
 
 	private RequestPostProcessor authenticatedUser() {
-		return jwt().authorities(new SimpleGrantedAuthority("ROLE_MANAGER"));
-	}
+    return com.bd2.seniorhomeapp.security.SecurityTestSupport.asManager(seniorHomeId);
+}
 }

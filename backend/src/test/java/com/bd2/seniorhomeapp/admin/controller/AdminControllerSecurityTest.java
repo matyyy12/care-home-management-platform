@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bd2.seniorhomeapp.admin.dto.response.AdminBackupResponse;
 import com.bd2.seniorhomeapp.admin.service.AdminService;
+import com.bd2.seniorhomeapp.config.GlobalExceptionHandler;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.mock;
 
 @WebMvcTest(AdminController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(AdminControllerSecurityTest.MethodSecurityTestConfig.class)
+@Import({AdminControllerSecurityTest.MethodSecurityTestConfig.class, GlobalExceptionHandler.class})
 class AdminControllerSecurityTest {
 
     @Autowired
@@ -37,8 +38,8 @@ class AdminControllerSecurityTest {
     @WithMockUser(roles = "DIRECTOR")
     void createBackupShouldBeForbiddenForDirector() throws Exception {
         mockMvc.perform(post("/api/admin/backup"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Access Denied"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Brak uprawnień do wykonania tej operacji"));
     }
 
     @Test

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -23,18 +24,21 @@ public class SeniorController {
 	private final SeniorService seniorService;
 
 	@GetMapping
+	@PreAuthorize("@authz.canRead(T(com.bd2.seniorhomeapp.security.AppModule).SENIORS)")
 	public ResponseEntity<?> list(@RequestParam(required = false) Long id) {
 		List<SeniorResponse> response = seniorService.findAll(id);
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
 	@PostMapping
+	@PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).SENIORS)")
 	public ResponseEntity<SeniorResponse> create(@Valid @RequestBody CreateSeniorRequest request) {
 		SeniorResponse created = seniorService.create(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(created);
 	}
 
 	@PatchMapping("/{id}")
+	@PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).SENIORS)")
 	public ResponseEntity<?> update(
 			@PathVariable Long id,
 			@Valid @RequestBody UpdateSeniorRequest request) {
@@ -43,6 +47,7 @@ public class SeniorController {
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("@authz.canWrite(T(com.bd2.seniorhomeapp.security.AppModule).SENIORS)")
 	public ResponseEntity<?> delete(@PathVariable Long id) {
 		seniorService.delete(id);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
